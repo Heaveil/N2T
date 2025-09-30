@@ -1,0 +1,81 @@
+/**
+ * The Hack Central Processing unit (CPU).
+ * Parses the binary code in the instruction input and executes it according to the
+ * Hack machine language specification. In the case of a C-instruction, computes the
+ * function specified by the instruction. If the instruction specifies to read a memory
+ * value, the inM input is expected to contain this value. If the instruction specifies
+ * to write a value to the memory, sets the outM output to this value, sets the addressM
+ * output to the target address, and asserts the writeM output (when writeM = 0, any
+ * value may appear in outM).
+ * If the reset input is 0, computes the address of the next instruction and sets the
+ * pc output to that value. If the reset input is 1, sets pc to 0.
+ * Note: The outM and writeM outputs are combinational: they are affected by the
+ * instruction's execution during the current cycle. The addressM and pc outputs are
+ * clocked: although they are affected by the instruction's execution, they commit to
+ * their new values only in the next cycle.
+ */
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+    // Instruction table
+    Or(a=instruction[0]  , b=false , out=j3   );
+    Or(a=instruction[1]  , b=false , out=j2   );
+    Or(a=instruction[2]  , b=false , out=j1   );
+    Or(a=instruction[3]  , b=false , out=d3   );
+    Or(a=instruction[4]  , b=false , out=d2   );
+    Or(a=instruction[5]  , b=false , out=d1   );
+    Or(a=instruction[6]  , b=false , out=c6   );
+    Or(a=instruction[7]  , b=false , out=c5   );
+    Or(a=instruction[8]  , b=false , out=c4   );
+    Or(a=instruction[9]  , b=false , out=c3   );
+    Or(a=instruction[10] , b=false , out=c2   );
+    Or(a=instruction[11] , b=false , out=c1   );
+    Or(a=instruction[12] , b=false , out=a    );
+    Or(a=instruction[15] , b=false , out=CIns );
+    Not(in=CIns , out=AIns );
+
+    // Check if AIns or CIns
+    Or(a=AIns  , b=d1 , out=loadARegister );
+    And(a=CIns , b=d2 , out=loadDRegister );
+    And(a=CIns , b=d3 , out=writeM );
+
+    // Main Connections
+    Mux16(a=ALUOut , b=instruction , sel=AIns , out=ARegIn );
+    ARegister(in=ARegIn , load=loadARegister , out=ARegOut, out[0..14]=addressM );
+    DRegister(in=ALUOut , load=loadDRegister , out=DRegOut );
+    Mux16(a=ARegOut , b=inM , sel=a, out=MuxOut );
+
+    // Make ps
+    Not(in=zr , out=zrNot );
+    Not(in=ng , out=ngNot );
+    And(a=zrNot, b=ngNot , out=ps );
+
+    // ng = negative
+    // zr = zero
+    // ps = positive
+    And(a=j1 , b=ng , out=J1 );
+    And(a=j2 , b=zr , out=J2 );
+    And(a=j3 , b=ps , out=J3 );
+    
+    // Compare Logic
+    Or(a=J1 , b=J2 , out=J4 );
+    Or(a=J3 , b=J4 , out=ConOut );
+
+    And(a=ConOut , b=CIns , out=PCLoad ); // Check if CIns
+    Not(in=PCLoad , out=inc ); // If we don't jump, increment
+
+    PC(in=ARegOut , load=PCLoad , inc=inc , reset=reset , out[0..14]=pc );
+    ALU(x=DRegOut , y=MuxOut , zx=c1 , nx=c2 , zy=c3 , ny=c4, f=c5 , no=c6 , out=ALUOut , out=outM, zr=zr , ng=ng );
+}
