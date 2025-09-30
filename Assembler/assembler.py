@@ -113,6 +113,23 @@ import sys
 # Also translates numbers into its binary form
 def translate(symbols, command_type):
     binary = "0000000000000000"
+
+    match command_type:
+        case 1:
+            number = symbols[0]
+
+        case 2:
+            comp = symbols[0]
+
+        case 3:
+            comp, dest = symbols[0], symbols[1]
+
+        case 4:
+            comp, jump = symbols [0], symbols[1]
+
+        case 5:
+            comp, dest, jump = symbols[0], symbols[1]
+
     return binary
 
 # Parses A and C Commands
@@ -126,6 +143,22 @@ def translate(symbols, command_type):
 def parser(value):
     symbols = []
     command_type = 0
+
+    if "@" in value:
+        command_type = 1
+
+    elif "=" in value and ";" in value:
+        command_type = 5
+
+    elif "=" in value:
+        command_type = 3
+
+    elif ";" in value:
+        command_type = 4
+
+    else:
+        command_type = 2
+
     return symbols, command_type
 
 if __name__=="__main__":
