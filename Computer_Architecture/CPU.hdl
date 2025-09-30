@@ -68,7 +68,7 @@ CHIP CPU {
     And(a=j1 , b=ng , out=J1 );
     And(a=j2 , b=zr , out=J2 );
     And(a=j3 , b=ps , out=J3 );
-    
+
     // Compare Logic
     Or(a=J1 , b=J2 , out=J4 );
     Or(a=J3 , b=J4 , out=ConOut );
