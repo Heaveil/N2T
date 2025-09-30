@@ -146,18 +146,27 @@ def parser(value):
 
     if "@" in value:
         command_type = 1
-
+        symbols.append(value.split("@")[1])
     elif "=" in value and ";" in value:
         command_type = 5
-
+        seperated_equal = value.split("=")
+        seperated_comma = seperated_equal[1].split(";")
+        symbols.append(seperated_comma[0])
+        symbols.append(seperated_equal[0])
+        symbols.append(seperated_comma[1])
     elif "=" in value:
         command_type = 3
-
+        seperated = value.split("=")
+        symbols.append(seperated[1])
+        symbols.append(seperated[0])
     elif ";" in value:
         command_type = 4
-
+        seperated = value.split(";")
+        symbols.append(seperated[0])
+        symbols.append(seperated[1])
     else:
         command_type = 2
+        symbols.append(value)
 
     return symbols, command_type
 
