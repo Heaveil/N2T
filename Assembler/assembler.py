@@ -105,6 +105,73 @@ jump = {
     "JMP" : "111"
 }
 
+free_symbol_slot = 16
+
 import sys
 
-assembly = sys.argv[1]
+# Translates each field into corresponding binary values
+# Also translates numbers into its binary form
+def translate(symbols, command_type):
+    binary = "0000000000000000"
+    return binary
+
+# Parses A and C Commands
+# command types:
+# 1 if A Command
+# 2 if C Command comp only
+# 3 if C Command comp and dest
+# 4 if C Command comp and jump
+# 5 if C Command comp, dest and jump
+# symbols array structure depends on command type
+def parser(value):
+    symbols = []
+    command_type = 0
+    return symbols, command_type
+
+if __name__=="__main__":
+    file = open(sys.argv[1], "r")
+    lines = file.readlines()
+    assembly_with_labels = []
+    assembly = []
+    binary_code = []
+
+    # Remove Whitespace and Comments
+    for line in lines:
+        if line[0] != "\n" and line[0] != "/":
+            command = line.split()[0]
+            assembly_with_labels.append(command)
+
+    # Remove Labels
+    line_count = 0
+    for index, line in enumerate(assembly_with_labels):
+        if line[0] == "(":
+            line = line.replace("(", "").replace(")", "")
+            if line not in symbol:
+                symbol[line] = line_count
+        else:
+            assembly.append(line)
+            line_count += 1
+    
+    # Replace variables and labels
+    for index, line in enumerate(assembly):
+        if line[0] == "@":
+            number = 0
+            variable = line.split("@")[1]
+            if not variable.isdigit():
+                if variable in symbol:
+                    number = symbol[variable]
+                else :
+                    symbol[variable] = free_symbol_slot
+                    number = free_symbol_slot
+                    free_symbol_slot += 1
+                assembly[index] = f"@{number}"
+
+    # Translates into binary
+    for line in assembly:
+        symbols, command_type = parser(line)
+        binary = translate(symbols, command_type)
+        binary_code.append(binary)
+
+    print(assembly)
+
+    file.close()
