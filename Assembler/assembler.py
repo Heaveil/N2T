@@ -111,64 +111,33 @@ import sys
 
 # Translates each field into corresponding binary values
 # Also translates numbers into its binary form
-def translate(symbols, command_type):
-    binary = "0000000000000000"
-
-    match command_type:
-        case 1:
-            number = symbols[0]
-
-        case 2:
-            comp = symbols[0]
-
-        case 3:
-            comp, dest = symbols[0], symbols[1]
-
-        case 4:
-            comp, jump = symbols [0], symbols[1]
-
-        case 5:
-            comp, dest, jump = symbols[0], symbols[1]
-
-    return binary
+def translate(symbols):
+    return 0
 
 # Parses A and C Commands
-# command types:
-# 1 if A Command
-# 2 if C Command comp only
-# 3 if C Command comp and dest
-# 4 if C Command comp and jump
-# 5 if C Command comp, dest and jump
-# symbols array structure depends on command type
 def parser(value):
-    symbols = []
-    command_type = 0
+    symbols = {}
 
     if "@" in value:
-        command_type = 1
-        symbols.append(value.split("@")[1])
+        symbols["@"] = value.split("@")[1]
     elif "=" in value and ";" in value:
-        command_type = 5
         seperated_equal = value.split("=")
         seperated_comma = seperated_equal[1].split(";")
-        symbols.append(seperated_comma[0])
-        symbols.append(seperated_equal[0])
-        symbols.append(seperated_comma[1])
+        symbols["comp"] = seperated_comma[0]
+        symbols["jump"] = seperated_comma[1]
+        symbols["dest"] = seperated_equal[0]
     elif "=" in value:
-        command_type = 3
         seperated = value.split("=")
-        symbols.append(seperated[1])
-        symbols.append(seperated[0])
+        symbols["comp"] = seperated[1]
+        symbols["dest"] = seperated[0]
     elif ";" in value:
-        command_type = 4
         seperated = value.split(";")
-        symbols.append(seperated[0])
-        symbols.append(seperated[1])
+        symbols["comp"] = seperated[0]
+        symbols["jump"] = seperated[1]
     else:
-        command_type = 2
-        symbols.append(value)
+        symbols["comp"] = value
 
-    return symbols, command_type
+    return symbols
 
 if __name__=="__main__":
     file = open(sys.argv[1], "r")
@@ -210,8 +179,8 @@ if __name__=="__main__":
 
     # Translates into binary
     for line in assembly:
-        symbols, command_type = parser(line)
-        binary = translate(symbols, command_type)
+        symbols = parser(line)
+        binary = translate(symbols)
         binary_code.append(binary)
 
     print(assembly)
