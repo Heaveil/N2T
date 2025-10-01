@@ -111,8 +111,18 @@ import sys
 
 # Translates each field into corresponding binary values
 # Also translates numbers into its binary form
-def translate(symbols):
-    return 0
+def translate(symbols, comp, dest, jump):
+    binary = ""
+
+    if "@" in symbols:
+        binary = format(int(symbols["@"]), "016b")
+    else:
+        comp = comp[symbols["comp"]]
+        dest = dest[symbols["dest"]] if "dest" in symbols else "000"
+        jump = jump[symbols["jump"]] if "jump" in symbols else "000"
+        binary = "111" + comp + dest + jump
+
+    return binary
 
 # Parses A and C Commands
 def parser(value):
@@ -140,17 +150,20 @@ def parser(value):
     return symbols
 
 if __name__=="__main__":
-    file = open(sys.argv[1], "r")
-    lines = file.readlines()
-    assembly_with_labels = []
+    out_file_name = f"{sys.argv[1][:-4]}.hack"
+    in_file = open(sys.argv[1], "r")
+    out_file = open(out_file_name, "w")
+    lines = in_file.readlines()
     assembly = []
     binary_code = []
+    assembly_with_labels = []
 
     # Remove Whitespace and Comments
     for line in lines:
         if line[0] != "\n" and line[0] != "/":
             command = line.split()[0]
-            assembly_with_labels.append(command)
+            if command[0] != "/":
+                assembly_with_labels.append(command)
 
     # Remove Labels
     line_count = 0
@@ -162,7 +175,7 @@ if __name__=="__main__":
         else:
             assembly.append(line)
             line_count += 1
-    
+
     # Replace variables and labels
     for index, line in enumerate(assembly):
         if line[0] == "@":
@@ -180,9 +193,15 @@ if __name__=="__main__":
     # Translates into binary
     for line in assembly:
         symbols = parser(line)
-        binary = translate(symbols)
+        binary = translate(symbols, comp, dest, jump)
         binary_code.append(binary)
 
-    print(assembly)
+    # Write to out file
+    for index, line in enumerate(binary_code):
+        if index == len(binary_code) - 1:
+            out_file.write(line)
+        else :
+            out_file.write(line + "\n")
 
-    file.close()
+    in_file.close()
+    out_file.close()
