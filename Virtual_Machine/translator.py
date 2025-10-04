@@ -5,16 +5,21 @@ Read   : ***.vm from command line argument
 output : ***.asm
 '''
 
-arithmetic = {
+instructios = {
+    # Arithmetc
     "add" : [],
     "sub" : [],
     "neg" : [],
-    "eq"  : [],
-    "gt"  : [],
-    "lt"  : [],
+    # Logical
+    # -1 = True
+    # 0  = False
     "and" : [],
     "or"  : [],
-    "not" : []
+    "not" : [],
+    # Comparisons (Require Jump Labels)
+    "eq"  : [],
+    "gt"  : [],
+    "lt"  : []
 }
 
 segment_pointer = {
