@@ -1,8 +1,8 @@
 '''
 Translates Stack Machine Language to Assembly
 
-Read   : ***.vm from command line argument
-output : ***.asm
+Input  : ***.vm
+Output : ***.asm
 '''
 
 functions = {
@@ -52,6 +52,15 @@ comparisons = {
     "lt": "JLT"
 }
 
+segment_pointer = {
+    "local"    : ["LCL" , "M", "M"],
+    "argument" : ["ARG" , "M", "M"],
+    "this"     : ["THIS", "M", "M"],
+    "that"     : ["THAT", "M", "M"],
+    "temp"     : ["5"   , "A", "M"],
+    "constant" : ["0"   , "A", "A"]
+}
+
 counter = 0
 
 def comparison_instruction(command):
@@ -79,15 +88,6 @@ def comparison_instruction(command):
         f"({label_end})"
     ]
     return code
-
-segment_pointer = {
-    "local"    : ["LCL" , "M", "M"],
-    "argument" : ["ARG" , "M", "M"],
-    "this"     : ["THIS", "M", "M"],
-    "that"     : ["THAT", "M", "M"],
-    "temp"     : ["5"   , "A", "M"],
-    "constant" : ["0"   , "A", "A"]
-}
 
 def push_instruction(segment, i, file_name):
     if segment in segment_pointer :

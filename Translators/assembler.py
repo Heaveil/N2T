@@ -1,33 +1,10 @@
 '''
-An Assembler for the Hack Machine Language
+Translates Assembly to Machine Language
 
-Read  : xxx.asm from command line argument
-Output: xxx.hack
+Input  : ***.asm
+Output : ***.hack
 '''
 
-'''
-### Strategy
-
-## First Pass
-# Compute Labels : (XXX), put them in the symbol table
-
-## Second Pass
-
-## Whitespace and Comments
-# if empty skip; if starts with '/' skip; split white spaces and get the first string
-
-## Replacing Variables
-# @[variable]; if variable in table, variable = value; else put it in the symbol table
-
-## Parsing Commands
-# A-Command : @[value]
-# C-Command : [dest] = [comp] ; [jump] 
-#             comp always exist
-#             dest exist if there is '='
-#             jump exist if there is ';'
-'''
-
-### Tables
 symbol = {
     "R0"     : "0",
     "R1"     : "1",
