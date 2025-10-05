@@ -34,17 +34,9 @@ counter = 0
 def basic_instruction(command):
     code = []
     if command == "neg" or command == "not":
-        code = [
-            "@SP",
-            "A=M-1"
-        ]
+        code = [ "@SP", "A=M-1" ]
     else :
-        code = [
-            "@SP",
-            "AM=M-1",
-            "D=M",
-            "A=A-1"
-        ]
+        code = [ "@SP", "AM=M-1", "D=M", "A=A-1" ]
     code.append(basic[command])
     return code
 
@@ -54,22 +46,12 @@ def comparison_instruction(command):
     label_end = f"CMP_END_{counter}"
     counter += 1
     code = [
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "A=A-1",
-        "D=M-D",
-        f"@{label_true}",
-        f"D;{comparisons[command]}",
-        "@SP",
-        "A=M-1",
-        "M=0",
-        f"@{label_end}",
-        "0;JMP",
+        "@SP", "AM=M-1", "D=M", "A=A-1", "D=M-D",
+        f"@{label_true}", f"D;{comparisons[command]}",
+        "@SP", "A=M-1", "M=0",
+        f"@{label_end}", "0;JMP",
         f"({label_true})",
-        "@SP",
-        "A=M-1",
-        "M=-1",
+        "@SP", "A=M-1", "M=-1",
         f"({label_end})"
     ]
     return code
@@ -79,28 +61,18 @@ def push_instruction(segment, i, file_name):
     if segment in segment_pointer :
         seg = segment_pointer[segment]
         code = [
-            f"@{i}",
-            "D=A",
-            f"@{seg[0]}",
-            f"A=D+{seg[1]}",
-            f"D={seg[2]}",
-            "@SP",
-            "A=M",
-            "M=D",
-            "@SP",
-            "M=M+1"
+            f"@{i}", "D=A",
+            f"@{seg[0]}", f"A=D+{seg[1]}", f"D={seg[2]}",
+            "@SP", "A=M", "M=D",
+            "@SP", "M=M+1"
         ]
     else :
         seg = "THIS" if i == "0" else "THAT"
         line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
         code = [
-            f"{line}",
-            "D=M",
-            "@SP",
-            "A=M",
-            "M=D",
-            "@SP",
-            "M=M+1"
+            f"{line}", "D=M",
+            "@SP", "A=M", "M=D",
+            "@SP", "M=M+1"
         ]
     return code
 
@@ -109,28 +81,18 @@ def pop_instruction (segment, i, file_name):
     if segment in segment_pointer :
         seg = segment_pointer[segment]
         code = [
-            f"@{i}",
-            "D=A",
-            f"@{seg[0]}",
-            f"D=D+{seg[1]}",
-            "@R13",
-            "M=D",
-            "@SP",
-            "AM=M-1",
-            "D=M",
-            "@R13",
-            "A=M",
-            "M=D"
+            f"@{i}", "D=A",
+            f"@{seg[0]}", f"D=D+{seg[1]}",
+            "@R13", "M=D",
+            "@SP", "AM=M-1", "D=M",
+            "@R13", "A=M", "M=D"
         ]
     else :
         seg = "THIS" if i == "0" else "THAT"
         line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
         code = [
-            "@SP",
-            "AM=M-1",
-            "D=M",
-            f"{line}",
-            "M=D",
+            "@SP", "AM=M-1", "D=M",
+            f"{line}", "M=D",
         ]
     return code
 
