@@ -6,7 +6,6 @@ output : ***.asm
 '''
 
 functions = {
-    # Arithmetc
     "add" : [
         "@SP",
         "AM=M-1",
@@ -26,7 +25,6 @@ functions = {
         "A=M-1",
         "M=-M"
     ],
-    # Logical
     "and" : [
         "@SP",
         "AM=M-1",
@@ -45,12 +43,42 @@ functions = {
         "@SP",
         "A=M-1",
         "M=!M"
-    ],
-    # Comparisons (Require Jump Labels)
-    "eq"  : [],
-    "gt"  : [],
-    "lt"  : []
+    ]
 }
+
+comparisons = {
+    "eq": "JEQ",
+    "gt": "JGT",
+    "lt": "JLT"
+}
+
+counter = 0
+
+def comparison_instruction(command):
+    global counter
+    label_true = f"CMP_TRUE_{counter}"
+    label_end = f"CMP_END_{counter}"
+    counter += 1
+    code = [
+        "@SP",
+        "AM=M-1",
+        "D=M",
+        "A=A-1",
+        "D=M-D",
+        f"@{label_true}",
+        f"D;{comparisons[command]}",
+        "@SP",
+        "A=M-1",
+        "M=0",
+        f"@{label_end}",
+        "0;JMP",
+        f"({label_true})",
+        "@SP",
+        "A=M-1",
+        "M=-1",
+        f"({label_end})"
+    ]
+    return code
 
 segment_pointer = {
     "local"    : ["LCL" , "M", "M"],
@@ -126,26 +154,29 @@ import sys
 if __name__=="__main__":
     file_name = f"{sys.argv[1][:-3]}"
     in_file = open(sys.argv[1], "r")
-    # out_file = open(f"{file_name}.asm", "w")
+    out_file = open(f"{file_name}.asm", "w")
     lines = in_file.readlines()
     assembly_code = []
 
     # Check which instruction
     for line in lines:
         instruction = line.split()
-        if instruction[0] in functions:
-            assembly_code += functions[instruction[0]]
-        elif instruction[0] == "pop":
+        command = instruction[0]
+        if command in functions:
+            assembly_code += functions[command]
+        elif command in comparisons:
+            assembly_code += comparison_instruction(command)
+        elif command == "pop":
             assembly_code += pop_instruction(instruction[1], instruction[2], file_name)
-        elif instruction[0] == "push":
+        elif command == "push":
             assembly_code += push_instruction(instruction[1], instruction[2], file_name)
 
     # Write to out file
-    # for index, line in enumerate(assembly_code):
-    #     if index == len(assembly_code) - 1:
-    #         out_file.write(line)
-    #     else:
-    #         out_file.write(line + "\n")
+    for index, line in enumerate(assembly_code):
+        if index == len(assembly_code) - 1:
+            out_file.write(line)
+        else:
+            out_file.write(line + "\n")
 
     in_file.close()
-    # out_file.close()
+    out_file.close()
