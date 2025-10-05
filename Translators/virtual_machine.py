@@ -5,45 +5,13 @@ Input  : ***.vm
 Output : ***.asm
 '''
 
-functions = {
-    "add" : [
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "A=A-1",
-        "M=D+M"
-    ],
-    "sub" : [
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "A=A-1",
-        "M=M-D"
-    ],
-    "neg" : [
-        "@SP",
-        "A=M-1",
-        "M=-M"
-    ],
-    "and" : [
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "A=A-1",
-        "M=D&M"
-    ],
-    "or"  : [
-        "@SP",
-        "AM=M-1",
-        "D=M",
-        "A=A-1",
-        "M=D|M"
-    ],
-    "not" : [
-        "@SP",
-        "A=M-1",
-        "M=!M"
-    ]
+basic = {
+    "add" : "M=D+M",
+    "sub" : "M=M-D",
+    "neg" : "M=-M",
+    "and" : "M=D&M",
+    "or"  : "M=D|M",
+    "not" : "M=!M"
 }
 
 comparisons = {
@@ -62,6 +30,23 @@ segment_pointer = {
 }
 
 counter = 0
+
+def basic_instruction(command):
+    code = []
+    if command == "neg" or command == "not":
+        code = [
+            "@SP",
+            "A=M-1"
+        ]
+    else :
+        code = [
+            "@SP",
+            "AM=M-1",
+            "D=M",
+            "A=A-1"
+        ]
+    code.append(basic[command])
+    return code
 
 def comparison_instruction(command):
     global counter
@@ -90,6 +75,7 @@ def comparison_instruction(command):
     return code
 
 def push_instruction(segment, i, file_name):
+    code = []
     if segment in segment_pointer :
         seg = segment_pointer[segment]
         code = [
@@ -104,7 +90,6 @@ def push_instruction(segment, i, file_name):
             "@SP",
             "M=M+1"
         ]
-        return code
     else :
         seg = "THIS" if i == "0" else "THAT"
         line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
@@ -117,9 +102,10 @@ def push_instruction(segment, i, file_name):
             "@SP",
             "M=M+1"
         ]
-        return code
+    return code
 
 def pop_instruction (segment, i, file_name):
+    code = []
     if segment in segment_pointer :
         seg = segment_pointer[segment]
         code = [
@@ -136,7 +122,6 @@ def pop_instruction (segment, i, file_name):
             "A=M",
             "M=D"
         ]
-        return code
     else :
         seg = "THIS" if i == "0" else "THAT"
         line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
@@ -147,7 +132,7 @@ def pop_instruction (segment, i, file_name):
             f"{line}",
             "M=D",
         ]
-        return code
+    return code
 
 import sys
 
@@ -162,8 +147,8 @@ if __name__=="__main__":
     for line in lines:
         instruction = line.split()
         command = instruction[0]
-        if command in functions:
-            assembly_code += functions[command]
+        if command in basic:
+            assembly_code += basic_instruction(command)
         elif command in comparisons:
             assembly_code += comparison_instruction(command)
         elif command == "pop":
