@@ -1,7 +1,7 @@
 '''
 Translates Stack Machine Language to Assembly
 
-Input  : ***.vm
+Input  : ***.vm || Directory with ***.vm files
 Output : ***.asm
 '''
 
@@ -14,7 +14,7 @@ basic = {
     "not" : "M=!M"
 }
 
-comparisons = {
+cmp = {
     "eq": "JEQ",
     "gt": "JGT",
     "lt": "JLT"
@@ -31,23 +31,23 @@ segment_pointer = {
 
 counter = 0
 
-def basic_instruction(command):
+def basic_code(cmd):
     code = []
-    if command == "neg" or command == "not":
+    if cmd == "neg" or cmd == "not":
         code = [ "@SP", "A=M-1" ]
     else :
         code = [ "@SP", "AM=M-1", "D=M", "A=A-1" ]
-    code.append(basic[command])
+    code.append(basic[cmd])
     return code
 
-def comparison_instruction(command):
+def cmp_code(cmd):
     global counter
     label_true = f"CMP_TRUE_{counter}"
     label_end = f"CMP_END_{counter}"
     counter += 1
     code = [
         "@SP", "AM=M-1", "D=M", "A=A-1", "D=M-D",
-        f"@{label_true}", f"D;{comparisons[command]}",
+        f"@{label_true}", f"D;{cmp[cmd]}",
         "@SP", "A=M-1", "M=0",
         f"@{label_end}", "0;JMP",
         f"({label_true})",
@@ -56,7 +56,7 @@ def comparison_instruction(command):
     ]
     return code
 
-def push_instruction(segment, i, file_name):
+def push_code(segment, i, file_name):
     code = []
     if segment in segment_pointer :
         seg = segment_pointer[segment]
@@ -76,7 +76,7 @@ def push_instruction(segment, i, file_name):
         ]
     return code
 
-def pop_instruction (segment, i, file_name):
+def pop_code(segment, i, file_name):
     code = []
     if segment in segment_pointer :
         seg = segment_pointer[segment]
@@ -98,32 +98,57 @@ def pop_instruction (segment, i, file_name):
 
 import sys
 
+# TODO:
+# Add Directory Input
+# Initalize Bootstrap Code
+
 if __name__=="__main__":
     file_name = f"{sys.argv[1][:-3]}"
     in_file = open(sys.argv[1], "r")
-    out_file = open(f"{file_name}.asm", "w")
+    # out_file = open(f"{file_name}.asm", "w")
     lines = in_file.readlines()
     assembly_code = []
 
     # Check which instruction
     for line in lines:
-        instruction = line.split()
-        command = instruction[0]
-        if command in basic:
-            assembly_code += basic_instruction(command)
-        elif command in comparisons:
-            assembly_code += comparison_instruction(command)
-        elif command == "pop":
-            assembly_code += pop_instruction(instruction[1], instruction[2], file_name)
-        elif command == "push":
-            assembly_code += push_instruction(instruction[1], instruction[2], file_name)
+        line = line.strip()
+        if not line:
+            continue
+        line = line.split()
+        cmd = line[0]
+        match cmd :
+            case _ if cmd in basic:
+                assembly_code += basic_code(cmd)
+            case _ if cmd in cmp:
+                assembly_code += cmp_code(cmd)
+            case "pop":
+                segment, i = line[1], line[2]
+                assembly_code += pop_code(segment, i, file_name)
+            case "push":
+                segment, i = line[1], line[2]
+                assembly_code += push_code(segment, i, file_name)
+            case "label":
+                pass
+            case "goto":
+                pass
+            case "if-goto":
+                pass
+            case "function":
+                pass
+            case "call":
+                pass
+            case "return":
+                pass
+
+    for line in assembly_code:
+        print(line)
 
     # Write to out file
-    for index, line in enumerate(assembly_code):
-        if index == len(assembly_code) - 1:
-            out_file.write(line)
-        else:
-            out_file.write(line + "\n")
+    # for index, line in enumerate(assembly_code):
+    #     if index == len(assembly_code) - 1:
+    #         out_file.write(line)
+    #     else:
+    #         out_file.write(line + "\n")
 
     in_file.close()
-    out_file.close()
+    # out_file.close()
