@@ -96,23 +96,32 @@ def pop_code(segment, i, file_name):
         ]
     return code
 
-def label_code(name):
-    pass
+def label_code(name, file_name, function):
+    code = [f"({file_name}.{function}${name})"]
+    return code
 
-def goto_code(name):
-    pass
+def goto_code(name, file_name, function):
+    code = [f"@{file_name}.{function}${name}", "0;JMP"]
+    return code
 
-def if_goto_code(name):
-    pass
+def if_goto_code(name, file_name, function):
+    code = [
+        "@SP", "AM=M-1", "D=M",
+        f"@{file_name}.{function}${name}", "D;JNE"
+    ]
+    return code
 
 def function_code(name, i):
-    pass
+    code = []
+    return code
 
 def call_code(name, i):
-    pass
+    code = []
+    return code
 
 def return_code():
-    pass
+    code = []
+    return code
 
 
 import sys
@@ -127,6 +136,7 @@ if __name__=="__main__":
     # out_file = open(f"{file_name}.asm", "w")
     lines = in_file.readlines()
     assembly_code = []
+    current_function = ""
 
     # Check which instruction
     for line in lines:
@@ -148,15 +158,16 @@ if __name__=="__main__":
                 assembly_code += push_code(segment, i, file_name)
             case "label":
                 name = line[1]
-                assembly_code += label_code(name)
+                assembly_code += label_code(name, file_name, current_function)
             case "goto":
                 name = line[1]
-                assembly_code += goto_code(name)
+                assembly_code += goto_code(name, file_name, current_function)
             case "if-goto":
                 name = line[1]
-                assembly_code += if_goto_code(name)
+                assembly_code += if_goto_code(name, file_name, current_function)
             case "function":
                 name, i = line[1], line[2]
+                current_function = name
                 assembly_code += function_code(name, i)
             case "call":
                 name, i = line[1], line[2]
