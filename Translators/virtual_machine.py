@@ -149,9 +149,8 @@ def return_code():
     return code
 
 def bootstrap_code():
-    code = [
-
-    ]
+    code = ["@256", "D=A", "@SP", "M=D"]
+    code += call_code("Sys.init", "0", "", "Sys")
     return code
 
 def translate_file(in_file, file_name):
