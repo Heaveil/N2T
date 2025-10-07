@@ -136,9 +136,9 @@ def call_code(name, i, function, file_name):
 
 def return_code():
     code = [
-        "@LCL", "D=M", "@R13", "M=D",
         "@SP", "A=M-1","D=M", "@ARG", "A=M", "M=D",
         "@ARG", "D=M", "@SP", "M=D+1",
+        "@LCL", "D=M", "@R13", "M=D",
         "@R13", "AM=M-1", "D=M", "@THAT", "M=D",
         "@R13", "AM=M-1", "D=M", "@THIS", "M=D",
         "@R13", "AM=M-1", "D=M", "@ARG", "M=D",
@@ -150,7 +150,7 @@ def return_code():
 
 def bootstrap_code():
     code = ["@256", "D=A", "@SP", "M=D"]
-    code += call_code("Sys.init", "0", "", "Sys")
+    code += call_code("Sys.Sys.init", "0", "bootstrap", "Sys")
     return code
 
 def translate_file(in_file, file_name):
