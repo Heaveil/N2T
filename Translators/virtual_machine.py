@@ -148,22 +148,10 @@ def return_code():
     ]
     return code
 
-import sys
-
-if __name__=="__main__":
-
-    # TODO:
-    # Add Directory Input
-    # Initalize Bootstrap Code
-
-    file_name = f"{sys.argv[1][:-3]}"
-    in_file = open(sys.argv[1], "r")
-    # out_file = open(f"{file_name}.asm", "w")
+def translate_file(in_file, file_name):
     lines = in_file.readlines()
-    assembly_code = []
     current_function = ""
-
-    # Check which instruction
+    code = []
     for line in lines:
         line = line.strip()
         if not line:
@@ -172,43 +160,61 @@ if __name__=="__main__":
         cmd = line[0]
         match cmd :
             case _ if cmd in basic:
-                assembly_code += basic_code(cmd)
+                code += basic_code(cmd)
             case _ if cmd in cmp:
-                assembly_code += cmp_code(cmd)
+                code += cmp_code(cmd)
             case "pop":
                 segment, i = line[1], line[2]
-                assembly_code += pop_code(segment, i, file_name)
+                code += pop_code(segment, i, file_name)
             case "push":
                 segment, i = line[1], line[2]
-                assembly_code += push_code(segment, i, file_name)
+                code += push_code(segment, i, file_name)
             case "label":
                 name = line[1]
-                assembly_code += label_code(name, current_function, file_name)
+                code += label_code(name, current_function, file_name)
             case "goto":
                 name = line[1]
-                assembly_code += goto_code(name, current_function, file_name)
+                code += goto_code(name, current_function, file_name)
             case "if-goto":
                 name = line[1]
-                assembly_code += if_goto_code(name, current_function, file_name)
+                code += if_goto_code(name, current_function, file_name)
             case "function":
                 name, i = line[1], line[2]
                 current_function = name
-                assembly_code += function_code(name, i, file_name)
+                code += function_code(name, i, file_name)
             case "call":
                 name, i = line[1], line[2]
-                assembly_code += call_code(name, i, current_function, file_name)
+                code += call_code(name, i, current_function, file_name)
             case "return":
-                assembly_code += return_code()
+                code += return_code()
+    return code
 
-    for line in assembly_code:
-        print(line)
+import sys
+import os
+
+if __name__=="__main__":
+    path = sys.argv[1]
+    assembly_code = []
+    out_file_name = ""
+
+    if os.path.isfile(path):
+        in_file = open(path, "r")
+        file_name = f"{path[:-3]}"
+        out_file_name =f"{file_name}.asm"
+        assembly_code += translate_file(in_file, file_name)
+        in_file.close()
+    else :
+        out_file_name = f"{path}.asm"
+        # add bootstrap code
+        # for each .vm file in directory
+        #   assembly_code += translate_file
 
     # Write to out file
-    # for index, line in enumerate(assembly_code):
-    #     if index == len(assembly_code) - 1:
-    #         out_file.write(line)
-    #     else:
-    #         out_file.write(line + "\n")
+    out_file = open(out_file_name, "w")
+    for index, line in enumerate(assembly_code):
+        if index == len(assembly_code) - 1:
+            out_file.write(line)
+        else:
+            out_file.write(line + "\n")
 
-    in_file.close()
-    # out_file.close()
+    out_file.close()
