@@ -148,6 +148,12 @@ def return_code():
     ]
     return code
 
+def bootstrap_code():
+    code = [
+
+    ]
+    return code
+
 def translate_file(in_file, file_name):
     lines = in_file.readlines()
     current_function = ""
@@ -197,17 +203,25 @@ if __name__=="__main__":
     assembly_code = []
     out_file_name = ""
 
+    # If it is a file
     if os.path.isfile(path):
         in_file = open(path, "r")
-        file_name = f"{path[:-3]}"
+        file_name = path[:-3]
         out_file_name =f"{file_name}.asm"
         assembly_code += translate_file(in_file, file_name)
         in_file.close()
+
+    # If it is a directory
     else :
         out_file_name = f"{path}.asm"
-        # add bootstrap code
-        # for each .vm file in directory
-        #   assembly_code += translate_file
+        assembly_code += bootstrap_code()
+        for file in os.listdir(path):
+            if file.endswith(".vm"):
+                file_name = file[:-3]
+                in_file_path = os.path.join(path, file)
+                in_file = open(in_file_path, "r")
+                assembly_code += translate_file(in_file, file_name)
+                in_file.close()
 
     # Write to out file
     out_file = open(out_file_name, "w")
