@@ -113,11 +113,8 @@ def if_goto_code(name, function, file_name):
 
 def function_code(name, i, file_name):
     code = [ f"({file_name}.{name})" ]
-    push_0 = [
-        "@SP", "A=M", "M=0",
-        "@SP", "M=M+1"
-    ]
-    for _ in range(i):
+    push_0 = [ "@SP", "A=M", "M=0", "@SP", "M=M+1" ]
+    for _ in range(int(i)):
         code += push_0
     return code
 
@@ -139,8 +136,15 @@ def call_code(name, i, function, file_name):
 
 def return_code():
     code = [
-        ## Magic here
-        "0;JMP"
+        "@LCL", "D=M", "@R13", "M=D",
+        "@SP", "A=M-1","D=M", "@ARG", "A=M", "M=D",
+        "@ARG", "D=M", "@SP", "M=D+1",
+        "@R13", "AM=M-1", "D=M", "@THAT", "M=D",
+        "@R13", "AM=M-1", "D=M", "@THIS", "M=D",
+        "@R13", "AM=M-1", "D=M", "@ARG", "M=D",
+        "@R13", "AM=M-1", "D=M", "@LCL", "M=D",
+        "@R13", "AM=M-1", "D=M", "@R14", "M=D",
+        "@R14", "A=M", "0;JMP"
     ]
     return code
 
