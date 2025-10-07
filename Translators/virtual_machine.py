@@ -96,31 +96,42 @@ def pop_code(segment, i, file_name):
         ]
     return code
 
-def label_code(name, file_name, function):
+def label_code(name, function, file_name):
     code = [f"({file_name}.{function}${name})"]
     return code
 
-def goto_code(name, file_name, function):
+def goto_code(name, function, file_name):
     code = [f"@{file_name}.{function}${name}", "0;JMP"]
     return code
 
-def if_goto_code(name, file_name, function):
+def if_goto_code(name, function, file_name):
     code = [
         "@SP", "AM=M-1", "D=M",
         f"@{file_name}.{function}${name}", "D;JNE"
     ]
     return code
 
-def function_code(name, i):
-    code = []
+def function_code(name, i, file_name):
+    code = [
+        f"({file_name}.{name})",
+        ## Magic here
+    ]
     return code
 
-def call_code(name, i):
-    code = []
+def call_code(name, i, file_name):
+    global counter
+    code = [
+        f"({file_name}.{name}$ret.{counter})"
+        # Magic here
+    ]
+    counter += 1
     return code
 
 def return_code():
-    code = []
+    code = [
+        ## Magic here
+        "0;JMP"
+    ]
     return code
 
 
@@ -158,20 +169,20 @@ if __name__=="__main__":
                 assembly_code += push_code(segment, i, file_name)
             case "label":
                 name = line[1]
-                assembly_code += label_code(name, file_name, current_function)
+                assembly_code += label_code(name, current_function, file_name)
             case "goto":
                 name = line[1]
-                assembly_code += goto_code(name, file_name, current_function)
+                assembly_code += goto_code(name, current_function, file_name)
             case "if-goto":
                 name = line[1]
-                assembly_code += if_goto_code(name, file_name, current_function)
+                assembly_code += if_goto_code(name, current_function, file_name)
             case "function":
                 name, i = line[1], line[2]
                 current_function = name
-                assembly_code += function_code(name, i)
+                assembly_code += function_code(name, i, file_name)
             case "call":
                 name, i = line[1], line[2]
-                assembly_code += call_code(name, i)
+                assembly_code += call_code(name, i, file_name)
             case "return":
                 assembly_code += return_code()
 
