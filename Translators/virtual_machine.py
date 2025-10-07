@@ -112,17 +112,21 @@ def if_goto_code(name, function, file_name):
     return code
 
 def function_code(name, i, file_name):
-    code = [
-        f"({file_name}.{name})",
-        ## Magic here
+    code = [ f"({file_name}.{name})" ]
+    push_0 = [
+        "@SP", "A=M", "M=0",
+        "@SP", "M=M+1"
     ]
+    for _ in range(i):
+        code += push_0
     return code
 
-def call_code(name, i, file_name):
+def call_code(name, i, function, file_name):
     global counter
     code = [
-        f"({file_name}.{name}$ret.{counter})"
         # Magic here
+        f"@{name}", "0;JMP",
+        f"({file_name}.{function}$ret.{counter})"
     ]
     counter += 1
     return code
@@ -134,14 +138,14 @@ def return_code():
     ]
     return code
 
-
 import sys
 
-# TODO:
-# Add Directory Input
-# Initalize Bootstrap Code
-
 if __name__=="__main__":
+
+    # TODO:
+    # Add Directory Input
+    # Initalize Bootstrap Code
+
     file_name = f"{sys.argv[1][:-3]}"
     in_file = open(sys.argv[1], "r")
     # out_file = open(f"{file_name}.asm", "w")
@@ -182,7 +186,7 @@ if __name__=="__main__":
                 assembly_code += function_code(name, i, file_name)
             case "call":
                 name, i = line[1], line[2]
-                assembly_code += call_code(name, i, file_name)
+                assembly_code += call_code(name, i, current_function, file_name)
             case "return":
                 assembly_code += return_code()
 
