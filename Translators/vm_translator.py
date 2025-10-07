@@ -96,32 +96,32 @@ def pop_code(segment, i, file_name):
         ]
     return code
 
-def label_code(name, function, file_name):
-    code = [f"({file_name}.{function}${name})"]
+def label_code(name, function):
+    code = [f"({function}${name})"]
     return code
 
-def goto_code(name, function, file_name):
-    code = [f"@{file_name}.{function}${name}", "0;JMP"]
+def goto_code(name, function):
+    code = [f"@{function}${name}", "0;JMP"]
     return code
 
-def if_goto_code(name, function, file_name):
+def if_goto_code(name, function):
     code = [
         "@SP", "AM=M-1", "D=M",
-        f"@{file_name}.{function}${name}", "D;JNE"
+        f"@{function}${name}", "D;JNE"
     ]
     return code
 
-def function_code(name, i, file_name):
-    code = [ f"({file_name}.{name})" ]
+def function_code(name, i):
+    code = [ f"({name})" ]
     push_0 = [ "@SP", "A=M", "M=0", "@SP", "M=M+1" ]
     for _ in range(int(i)):
         code += push_0
     return code
 
-def call_code(name, i, function, file_name):
+def call_code(name, i, function):
     global counter
     code = [
-        f"@{file_name}.{function}$ret.{counter}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1",
+        f"@{function}$ret.{counter}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@LCL", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@ARG", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@THIS", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
@@ -129,28 +129,28 @@ def call_code(name, i, function, file_name):
         "@SP", "D=M", f"@{i}", "D=D-A", "@5", "D=D-A", "@ARG", "M=D",
         "@SP", "D=M", "@LCL", "M=D",
         f"@{name}", "0;JMP",
-        f"({file_name}.{function}$ret.{counter})"
+        f"({function}$ret.{counter})"
     ]
     counter += 1
     return code
 
 def return_code():
     code = [
-        "@SP", "A=M-1","D=M", "@ARG", "A=M", "M=D",
-        "@ARG", "D=M", "@SP", "M=D+1",
         "@LCL", "D=M", "@R13", "M=D",
+        "@5", "A=D-A", "D=M", "@R14", "M=D",
+        "@SP", "A=M-1", "D=M", "@ARG", "A=M", "M=D",
+        "@ARG", "D=M+1", "@SP", "M=D",
         "@R13", "AM=M-1", "D=M", "@THAT", "M=D",
         "@R13", "AM=M-1", "D=M", "@THIS", "M=D",
         "@R13", "AM=M-1", "D=M", "@ARG", "M=D",
         "@R13", "AM=M-1", "D=M", "@LCL", "M=D",
-        "@R13", "AM=M-1", "D=M", "@R14", "M=D",
         "@R14", "A=M", "0;JMP"
     ]
     return code
 
 def bootstrap_code():
     code = ["@256", "D=A", "@SP", "M=D"]
-    code += call_code("Sys.Sys.init", "0", "bootstrap", "Sys")
+    code += call_code("Sys.init", "0", "")
     return code
 
 def translate_file(in_file, file_name):
@@ -176,20 +176,20 @@ def translate_file(in_file, file_name):
                 code += push_code(segment, i, file_name)
             case "label":
                 name = line[1]
-                code += label_code(name, current_function, file_name)
+                code += label_code(name, current_function)
             case "goto":
                 name = line[1]
-                code += goto_code(name, current_function, file_name)
+                code += goto_code(name, current_function)
             case "if-goto":
                 name = line[1]
-                code += if_goto_code(name, current_function, file_name)
+                code += if_goto_code(name, current_function)
             case "function":
                 name, i = line[1], line[2]
                 current_function = name
-                code += function_code(name, i, file_name)
+                code += function_code(name, i)
             case "call":
                 name, i = line[1], line[2]
-                code += call_code(name, i, current_function, file_name)
+                code += call_code(name, i, current_function)
             case "return":
                 code += return_code()
     return code
