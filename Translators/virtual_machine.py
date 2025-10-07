@@ -96,6 +96,25 @@ def pop_code(segment, i, file_name):
         ]
     return code
 
+def label_code(name):
+    pass
+
+def goto_code(name):
+    pass
+
+def if_goto_code(name):
+    pass
+
+def function_code(name, i):
+    pass
+
+def call_code(name, i):
+    pass
+
+def return_code():
+    pass
+
+
 import sys
 
 # TODO:
@@ -128,17 +147,22 @@ if __name__=="__main__":
                 segment, i = line[1], line[2]
                 assembly_code += push_code(segment, i, file_name)
             case "label":
-                pass
+                name = line[1]
+                assembly_code += label_code(name)
             case "goto":
-                pass
+                name = line[1]
+                assembly_code += goto_code(name)
             case "if-goto":
-                pass
+                name = line[1]
+                assembly_code += if_goto_code(name)
             case "function":
-                pass
+                name, i = line[1], line[2]
+                assembly_code += function_code(name, i)
             case "call":
-                pass
+                name, i = line[1], line[2]
+                assembly_code += call_code(name, i)
             case "return":
-                pass
+                assembly_code += return_code()
 
     for line in assembly_code:
         print(line)
