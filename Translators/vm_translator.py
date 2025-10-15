@@ -5,22 +5,31 @@ Input  : ***.vm || Directory with ***.vm files
 Output : ***.asm
 '''
 
-basic = {
-    "add" : "M=D+M",
-    "sub" : "M=M-D",
-    "neg" : "M=-M",
-    "and" : "M=D&M",
-    "or"  : "M=D|M",
-    "not" : "M=!M"
+counter = 0
+current_function = ""
+filename = ""
+
+instruction = {
+    "pop"      : lambda line: pop_code(line),
+    "push"     : lambda line: push_code(line),
+    "label"    : lambda line: label_code(line),
+    "goto"     : lambda line: goto_code(line),
+    "if-goto"  : lambda line: if_goto_code(line),
+    "function" : lambda line: function_code(line),
+    "call"     : lambda line: call_code(line),
+    "return"   : lambda line: return_code(line),
+    "add"      : lambda line: basic_code(line,"M=D+M"),
+    "sub"      : lambda line: basic_code(line,"M=M-D"),
+    "neg"      : lambda line: basic_code(line,"M=-M"),
+    "and"      : lambda line: basic_code(line,"M=D&M"),
+    "or"       : lambda line: basic_code(line,"M=D|M"),
+    "not"      : lambda line: basic_code(line,"M=!M"),
+    "eq"       : lambda line: cmp_code(line, "JEQ"),
+    "gt"       : lambda line: cmp_code(line,"JGT"),
+    "lt"       : lambda line: cmp_code(line,"JLT")
 }
 
-cmp = {
-    "eq": "JEQ",
-    "gt": "JGT",
-    "lt": "JLT"
-}
-
-segment_pointer = {
+segment_dict = {
     "local"    : ["LCL" , "M", "M"],
     "argument" : ["ARG" , "M", "M"],
     "this"     : ["THIS", "M", "M"],
@@ -29,25 +38,25 @@ segment_pointer = {
     "constant" : ["0"   , "A", "A"]
 }
 
-counter = 0
 
-def basic_code(cmd):
+def basic_code(line, arg):
+    cmd = line[0]
     code = []
     if cmd == "neg" or cmd == "not":
         code = [ "@SP", "A=M-1" ]
     else :
         code = [ "@SP", "AM=M-1", "D=M", "A=A-1" ]
-    code.append(basic[cmd])
+    code.append(arg)
     return code
 
-def cmp_code(cmd):
+def cmp_code(line, arg):
     global counter
     label_true = f"CMP_TRUE_{counter}"
     label_end = f"CMP_END_{counter}"
     counter += 1
     code = [
         "@SP", "AM=M-1", "D=M", "A=A-1", "D=M-D",
-        f"@{label_true}", f"D;{cmp[cmd]}",
+        f"@{label_true}", f"D;{arg}",
         "@SP", "A=M-1", "M=0",
         f"@{label_end}", "0;JMP",
         f"({label_true})",
@@ -56,85 +65,99 @@ def cmp_code(cmd):
     ]
     return code
 
-def push_code(segment, i, file_name):
+def push_code(line):
+    global filename
+    seg , i = line[1], line[2]
     code = []
-    if segment in segment_pointer :
-        seg = segment_pointer[segment]
+    if seg in segment_dict :
+        val = segment_dict[seg]
         code = [
             f"@{i}", "D=A",
-            f"@{seg[0]}", f"A=D+{seg[1]}", f"D={seg[2]}",
+            f"@{val[0]}", f"A=D+{val[1]}", f"D={val[2]}",
             "@SP", "A=M", "M=D",
             "@SP", "M=M+1"
         ]
     else :
-        seg = "THIS" if i == "0" else "THAT"
-        line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
+        arg = "THIS" if i == "0" else "THAT"
+        val = f"@{filename}.{i}" if seg == "static" else f"@{arg}"
         code = [
-            f"{line}", "D=M",
+            f"{val}", "D=M",
             "@SP", "A=M", "M=D",
             "@SP", "M=M+1"
         ]
     return code
 
-def pop_code(segment, i, file_name):
+def pop_code(line):
+    global filename
+    seg, i = line[1], line[2]
     code = []
-    if segment in segment_pointer :
-        seg = segment_pointer[segment]
+    if seg in segment_dict:
+        val = segment_dict[seg]
         code = [
             f"@{i}", "D=A",
-            f"@{seg[0]}", f"D=D+{seg[1]}",
+            f"@{val[0]}", f"D=D+{val[1]}",
             "@R13", "M=D",
             "@SP", "AM=M-1", "D=M",
             "@R13", "A=M", "M=D"
         ]
     else :
-        seg = "THIS" if i == "0" else "THAT"
-        line = f"@{file_name}.{i}" if segment == "static" else f"@{seg}"
+        arg = "THIS" if i == "0" else "THAT"
+        val = f"@{filename}.{i}" if seg == "static" else f"@{arg}"
         code = [
             "@SP", "AM=M-1", "D=M",
-            f"{line}", "M=D",
+            f"{val}", "M=D",
         ]
     return code
 
-def label_code(name, function):
-    code = [f"({function}${name})"]
+def label_code(line):
+    global current_function
+    label_name= line[1]
+    code = [f"({current_function}${label_name})"]
     return code
 
-def goto_code(name, function):
-    code = [f"@{function}${name}", "0;JMP"]
+def goto_code(line):
+    global current_function
+    label_name = line[1]
+    code = [f"@{current_function}${label_name}", "0;JMP"]
     return code
 
-def if_goto_code(name, function):
+def if_goto_code(line):
+    global current_function
+    label_name = line[1]
     code = [
         "@SP", "AM=M-1", "D=M",
-        f"@{function}${name}", "D;JNE"
+        f"@{current_function}${label_name}", "D;JNE"
     ]
     return code
 
-def function_code(name, i):
-    code = [ f"({name})" ]
+def function_code(line):
+    global current_function
+    i = line[2]
+    code = [ f"({current_function})" ]
     push_0 = [ "@SP", "A=M", "M=0", "@SP", "M=M+1" ]
     for _ in range(int(i)):
         code += push_0
     return code
 
-def call_code(name, i, function):
+def call_code(line):
     global counter
+    global current_function
+    function_name, i = line[1], line[2]
     code = [
-        f"@{function}$ret.{counter}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1",
+        f"@{current_function}$ret.{counter}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@LCL", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@ARG", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@THIS", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@THAT", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1",
         "@SP", "D=M", f"@{i}", "D=D-A", "@5", "D=D-A", "@ARG", "M=D",
         "@SP", "D=M", "@LCL", "M=D",
-        f"@{name}", "0;JMP",
-        f"({function}$ret.{counter})"
+        f"@{function_name}", "0;JMP",
+        f"({current_function}$ret.{counter})"
     ]
     counter += 1
     return code
 
-def return_code():
+def return_code(line):
     code = [
         "@LCL", "D=M", "@R13", "M=D",
         "@5", "A=D-A", "D=M", "@R14", "M=D",
@@ -150,48 +173,7 @@ def return_code():
 
 def bootstrap_code():
     code = ["@256", "D=A", "@SP", "M=D"]
-    code += call_code("Sys.init", "0", "")
-    return code
-
-def translate_file(in_file, file_name):
-    lines = in_file.readlines()
-    current_function = ""
-    code = []
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        line = line.split()
-        cmd = line[0]
-        match cmd :
-            case _ if cmd in basic:
-                code += basic_code(cmd)
-            case _ if cmd in cmp:
-                code += cmp_code(cmd)
-            case "pop":
-                segment, i = line[1], line[2]
-                code += pop_code(segment, i, file_name)
-            case "push":
-                segment, i = line[1], line[2]
-                code += push_code(segment, i, file_name)
-            case "label":
-                name = line[1]
-                code += label_code(name, current_function)
-            case "goto":
-                name = line[1]
-                code += goto_code(name, current_function)
-            case "if-goto":
-                name = line[1]
-                code += if_goto_code(name, current_function)
-            case "function":
-                name, i = line[1], line[2]
-                current_function = name
-                code += function_code(name, i)
-            case "call":
-                name, i = line[1], line[2]
-                code += call_code(name, i, current_function)
-            case "return":
-                code += return_code()
+    code += call_code(["call", "Sys.init", "0"])
     return code
 
 import sys
@@ -207,7 +189,16 @@ if __name__=="__main__":
         in_file = open(path, "r")
         file_name = path[:-3]
         out_file_name =f"{file_name}.asm"
-        assembly_code += translate_file(in_file, file_name)
+        lines = in_file.readlines()
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            line = line.split()
+            if line[0] == "function":
+                current_function = line[1]
+            if line[0] in instruction:
+                assembly_code += instruction[line[0]](line)
         in_file.close()
 
     # If it is a directory
@@ -216,10 +207,19 @@ if __name__=="__main__":
         assembly_code += bootstrap_code()
         for file in os.listdir(path):
             if file.endswith(".vm"):
-                file_name = file[:-3]
+                filename = file[:-3]
                 in_file_path = os.path.join(path, file)
                 in_file = open(in_file_path, "r")
-                assembly_code += translate_file(in_file, file_name)
+                lines = in_file.readlines()
+                for line in lines:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    line = line.split()
+                    if line[0] == "function":
+                        current_function = line[1]
+                    if line[0] in instruction:
+                        assembly_code += instruction[line[0]](line)
                 in_file.close()
 
     # Write to out file
