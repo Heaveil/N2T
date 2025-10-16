@@ -38,7 +38,6 @@ segment_dict = {
     "constant" : ["0"   , "A", "A"]
 }
 
-
 def basic_code(line, arg):
     cmd = line[0]
     code = []
@@ -140,8 +139,7 @@ def function_code(line):
     return code
 
 def call_code(line):
-    global counter
-    global current_function
+    global counter, current_function
     function_name, i = line[1], line[2]
     code = [
         f"@{current_function}$ret.{counter}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1",
@@ -171,9 +169,19 @@ def return_code(line):
     ]
     return code
 
-def bootstrap_code():
-    code = ["@256", "D=A", "@SP", "M=D"]
-    code += call_code(["call", "Sys.init", "0"])
+def translate_file(in_file):
+    global current_function
+    code = []
+    lines = in_file.readlines()
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        line = line.split()
+        if line[0] == "function":
+            current_function = line[1]
+        if line[0] in instruction:
+            code += instruction[line[0]](line)
     return code
 
 import sys
@@ -186,40 +194,23 @@ if __name__=="__main__":
 
     # If it is a file
     if os.path.isfile(path):
+        filename = path[:-3]
+        out_file_name =f"{filename}.asm"
         in_file = open(path, "r")
-        file_name = path[:-3]
-        out_file_name =f"{file_name}.asm"
-        lines = in_file.readlines()
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            line = line.split()
-            if line[0] == "function":
-                current_function = line[1]
-            if line[0] in instruction:
-                assembly_code += instruction[line[0]](line)
+        assembly_code += translate_file(in_file)
         in_file.close()
 
     # If it is a directory
     else :
         out_file_name = f"{path}.asm"
-        assembly_code += bootstrap_code()
+        assembly_code += ["@256", "D=A", "@SP", "M=D"]
+        assembly_code += call_code(["call", "Sys.init", "0"])
         for file in os.listdir(path):
             if file.endswith(".vm"):
                 filename = file[:-3]
                 in_file_path = os.path.join(path, file)
                 in_file = open(in_file_path, "r")
-                lines = in_file.readlines()
-                for line in lines:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    line = line.split()
-                    if line[0] == "function":
-                        current_function = line[1]
-                    if line[0] in instruction:
-                        assembly_code += instruction[line[0]](line)
+                assembly_code += translate_file(in_file)
                 in_file.close()
 
     # Write to out file
@@ -229,5 +220,4 @@ if __name__=="__main__":
             out_file.write(line)
         else:
             out_file.write(line + "\n")
-
     out_file.close()
