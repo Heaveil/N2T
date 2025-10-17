@@ -51,6 +51,12 @@ class Parser:
         self.parse = []
         self.depth = 0
 
+    def peek(self):
+        return self.tokens[0] if self.tokens else (None, None)
+
+    def eat(self):
+        return self.tokens.pop(0) if self.tokens else (None, None)
+
     def getParse(self):
         return self.parse
 
@@ -60,6 +66,47 @@ class Parser:
         for symbol, token in self.tokens:
             pass
 
+    def parse_class(self):
+        pass
+
+    def parse_class_var_dec(self):
+        pass
+
+    def parse_subroutine(self):
+        pass
+
+    def parse_parameter_list(self):
+        pass
+
+    def parse_subroutine_body(self):
+        pass
+
+    def parse_var_dec(self):
+        pass
+
+    def parse_statements(self):
+        pass
+
+    def parse_let(self):
+        pass
+
+    def parse_if(self):
+        pass
+
+    def parse_while(self):
+        pass
+
+    def parse_do(self):
+        pass
+
+    def parse_return(self):
+        pass
+
+    def parse_term(self):
+        pass
+
+    def parse_expression_list(self):
+        pass
 
 def write_parser_file(parse):
     out_file = open("parse.xml", "w")
