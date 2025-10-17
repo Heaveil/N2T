@@ -56,7 +56,7 @@ def tokenize(line):
         elif word.isdigit():
             tokens += [("integerConstant", word)]
         elif "\"" in word:
-            tokens += [("StringConstant", word.replace("\"", ""))]
+            tokens += [("stringConstant", word.replace("\"", ""))]
         else:
             tokens += [("identifier", word)]
     return tokens
@@ -69,7 +69,7 @@ def write_token_file(tokens):
         out_file.write(f"<{symbol}>")
         out_file.write(f" {token} ")
         out_file.write(f"</{symbol}>\n")
-    out_file.write("</tokens>")
+    out_file.write("</tokens>\n")
     out_file.close()
 
 if __name__=="__main__":
