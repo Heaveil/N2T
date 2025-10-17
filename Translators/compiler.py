@@ -60,19 +60,25 @@ class Parser:
     def getParse(self):
         return self.parse
 
-    def parse_tokens(self):
-        # TODO:
-        # Populate the parse array
-        for symbol, token in self.tokens:
-            pass
-
     def parse_class(self):
+        self.parse.append((self.depth, "class"))
+        self.depth += 1
+        self.parse.append((self.depth, *self.eat())) # class
+        self.parse.append((self.depth, *self.eat())) # ClassName
+        self.parse.append((self.depth, *self.eat())) # {
+        while self.peek()[1] == "static" or self.peek()[1]=="field":
+            self.parse_class_var_dec()
+        while self.peek()[1] == "constructor" or self.peek()[1] == "function" or self.peek()[1] == "method":
+            self.parse_subroutine_dec()
+        self.parse.append((self.depth, *self.eat())) # }
+        self.depth -= 1
+        self.parse.append((self.depth, "/class"))
         pass
 
     def parse_class_var_dec(self):
         pass
 
-    def parse_subroutine(self):
+    def parse_subroutine_dec(self):
         pass
 
     def parse_parameter_list(self):
@@ -149,6 +155,6 @@ if __name__=="__main__":
     for line in lines:
         tokens += tokenize(line)
     parser = Parser(tokens)
-    parser.parse_tokens()
+    parser.parse_class()
     write_parser_file(parser.getParse())
     in_file.close()
