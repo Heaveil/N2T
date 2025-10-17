@@ -1,6 +1,4 @@
-import sys
-import os
-import re
+import sys, os, re
 
 tokens_dict = {
     "keyword": [
@@ -13,28 +11,6 @@ tokens_dict = {
         "+", "-", "*", "/", "&", "|", "<", ">", "=", "~"
     ],
 }
-
-# Assume if a line has block comments
-# It does not contain any code
-def remove_comments(in_file):
-    lines = in_file.readlines()
-    block_comment = False
-    clean_lines = []
-    for line in lines:
-        if "/*" in line and "*/" in line:
-            continue
-        if "/*" in line:
-            block_comment = True
-            continue
-        if "*/" in line:
-            block_comment = False
-            continue
-        if not block_comment :
-            if "//" in line:
-                clean_lines.append(line.split("//")[0])
-            else:
-                clean_lines.append(line)
-    return clean_lines
 
 # Returns a Tuple -> (type, token)
 def tokenize(line):
@@ -62,27 +38,70 @@ def tokenize(line):
     return tokens
 
 def write_token_file(tokens):
-    out_file = open("test.xml", "w")
+    out_file = open("tokens.xml", "w")
     out_file.write("<tokens>\n")
-    for token_tuple in tokens:
-        symbol, token = token_tuple[0], token_tuple[1]
-        out_file.write(f"<{symbol}>")
-        out_file.write(f" {token} ")
-        out_file.write(f"</{symbol}>\n")
+    for symbol, token in tokens:
+        out_file.write(f"<{symbol}> {token} </{symbol}>\n")
     out_file.write("</tokens>\n")
     out_file.close()
 
+class Parser:
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.parse = []
+        self.depth = 0
+
+    def getParse(self):
+        return self.parse
+
+    def parse_tokens(self):
+        # TODO:
+        # Populate the parse array
+        for symbol, token in self.tokens:
+            pass
+
+
+def write_parser_file(parse):
+    out_file = open("parse.xml", "w")
+    for parse_tuple in parse:
+        if len(parse_tuple) == 2:
+            indent, symbol = parse_tuple[0], parse_tuple[1]
+            out_file.write("  " * indent + f"<{symbol}>\n")
+        elif len(parse_tuple) == 3:
+            indent, symbol, token = parse_tuple[0], parse_tuple[1], parse_tuple[2]
+            out_file.write("  " * indent + f"<{symbol}> {token} </{symbol}>\n")
+    out_file.close()
+
+# Assume if a line has block comments
+# It does not contain any code
+def remove_comments(in_file):
+    lines = in_file.readlines()
+    block_comment = False
+    clean_lines = []
+    for line in lines:
+        if "/*" in line and "*/" in line:
+            continue
+        if "/*" in line:
+            block_comment = True
+            continue
+        if "*/" in line:
+            block_comment = False
+            continue
+        if not block_comment :
+            if "//" in line:
+                clean_lines.append(line.split("//")[0])
+            else:
+                clean_lines.append(line)
+    return clean_lines
+
 if __name__=="__main__":
     path = sys.argv[1]
-    out_file_name = ""
+    in_file = open(path, "r")
+    lines = remove_comments(in_file)
     tokens = []
-
-    # If it is a file
-    if os.path.isfile(path):
-        in_file = open(path, "r")
-        lines = remove_comments(in_file)
-        for line in lines:
-            tokens += tokenize(line)
-        in_file.close()
-
-    write_token_file(tokens)
+    for line in lines:
+        tokens += tokenize(line)
+    parser = Parser(tokens)
+    parser.parse_tokens()
+    write_parser_file(parser.getParse())
+    in_file.close()
