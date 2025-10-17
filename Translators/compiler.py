@@ -14,32 +14,44 @@ tokens_dict = {
     ],
 }
 
+def remove_comments(in_file):
+    lines = in_file.readlines()
+
+    # TODO:
+    # Handle Block Comments
+
+    clean_lines = []
+    for line in lines:
+        if "//" in line:
+            clean_lines.append(line.split("//")[0])
+        else:
+            clean_lines.append(line)
+    return clean_lines
+
 # Returns a Tuple -> (type, token)
 def tokenize(line):
-    tokens = []
     escaped = [re.escape(s) for s in tokens_dict["symbol"]]
     pattern = "(" + "|".join(escaped) + ")"
     parts = re.split(pattern, line)
     parts = [p.strip() for p in parts if p.strip()]
 
-    # TODO:
-    # split keywords without splitting string literals
-    # Remove comments
-    # comments either // .... or /* start (can be multiple lines) end */
-    return []
+    words = []
+    for part in parts:
+        words += [part] if "\"" in part else part.split()
 
-    # for word in words :
-    #     if word in tokens_dict["keyword"]:
-    #         tokens += [("keyword", word)]
-    #     elif word in tokens_dict["symbol"]:
-    #         tokens += [("symbol", word)]
-    #     elif word.isdigit():
-    #         tokens += [("integerConstant", word)]
-    #     elif "\"" in word:
-    #         tokens += [("StringConstant", word.replace("\"", ""))]
-    #     else:
-    #         tokens += [("identifier", word)]
-    # return tokens
+    tokens = []
+    for word in words :
+        if word in tokens_dict["keyword"]:
+            tokens += [("keyword", word)]
+        elif word in tokens_dict["symbol"]:
+            tokens += [("symbol", word)]
+        elif word.isdigit():
+            tokens += [("integerConstant", word)]
+        elif "\"" in word:
+            tokens += [("StringConstant", word.replace("\"", ""))]
+        else:
+            tokens += [("identifier", word)]
+    return tokens
 
 def write_token_file(tokens):
     out_file = open("test.xml", "w")
@@ -60,7 +72,7 @@ if __name__=="__main__":
     # If it is a file
     if os.path.isfile(path):
         in_file = open(path, "r")
-        lines = in_file.readlines()
+        lines = remove_comments(in_file)
         for line in lines:
             tokens += tokenize(line)
         in_file.close()
