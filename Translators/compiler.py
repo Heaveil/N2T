@@ -14,18 +14,26 @@ tokens_dict = {
     ],
 }
 
+# Assume if a line has block comments
+# It does not contain any code
 def remove_comments(in_file):
     lines = in_file.readlines()
-
-    # TODO:
-    # Handle Block Comments
-
+    block_comment = False
     clean_lines = []
     for line in lines:
-        if "//" in line:
-            clean_lines.append(line.split("//")[0])
-        else:
-            clean_lines.append(line)
+        if "/*" in line and "*/" in line:
+            continue
+        if "/*" in line:
+            block_comment = True
+            continue
+        if "*/" in line:
+            block_comment = False
+            continue
+        if not block_comment :
+            if "//" in line:
+                clean_lines.append(line.split("//")[0])
+            else:
+                clean_lines.append(line)
     return clean_lines
 
 # Returns a Tuple -> (type, token)
@@ -61,7 +69,7 @@ def write_token_file(tokens):
         out_file.write(f"<{symbol}>")
         out_file.write(f" {token} ")
         out_file.write(f"</{symbol}>\n")
-    out_file.write("</tokens>\n")
+    out_file.write("</tokens>")
     out_file.close()
 
 if __name__=="__main__":
