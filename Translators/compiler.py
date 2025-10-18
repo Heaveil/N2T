@@ -37,8 +37,8 @@ def tokenize(line):
             tokens += [("identifier", word)]
     return tokens
 
-def write_token_file(tokens):
-    out_file = open("tokens.xml", "w")
+def write_token_file(tokens, out_filename):
+    out_file = open(f"{out_filename}.xml", "w")
     out_file.write("<tokens>\n")
     for symbol, token in tokens:
         out_file.write(f"<{symbol}> {token} </{symbol}>\n")
@@ -52,10 +52,13 @@ class Parser:
         self.depth = 0
 
     def peek(self):
-        return self.tokens[0] if self.tokens else (None, None)
+        return self.tokens[0][1] if self.tokens else None
+
+    def advance(self):
+        return self.tokens.pop(0) if self.tokens else (None, None)
 
     def eat(self):
-        return self.tokens.pop(0) if self.tokens else (None, None)
+        self.parse.append((self.depth, *self.advance()))
 
     def getParse(self):
         return self.parse
@@ -63,59 +66,207 @@ class Parser:
     def parse_class(self):
         self.parse.append((self.depth, "class"))
         self.depth += 1
-        self.parse.append((self.depth, *self.eat())) # class
-        self.parse.append((self.depth, *self.eat())) # ClassName
-        self.parse.append((self.depth, *self.eat())) # {
-        while self.peek()[1] == "static" or self.peek()[1]=="field":
+        self.eat() # class
+        self.eat() # ClassName
+        self.eat() # {
+        while self.peek() == "static" or self.peek()=="field":
             self.parse_class_var_dec()
-        while self.peek()[1] == "constructor" or self.peek()[1] == "function" or self.peek()[1] == "method":
+        while self.peek() == "constructor" or self.peek() == "function" or self.peek() == "method":
             self.parse_subroutine_dec()
-        self.parse.append((self.depth, *self.eat())) # }
+        self.eat() # }
         self.depth -= 1
         self.parse.append((self.depth, "/class"))
-        pass
 
     def parse_class_var_dec(self):
-        pass
+        self.parse.append((self.depth, "classVarDec"))
+        self.depth += 1
+        self.eat() # static | field
+        self.eat() # type
+        self.eat() # varName
+        while self.peek() == ",":
+            self.eat() # ,
+            self.eat() # varName
+        self.eat() # ;
+        self.depth -= 1
+        self.parse.append((self.depth, "/classVarDec"))
 
     def parse_subroutine_dec(self):
-        pass
+        self.parse.append((self.depth, "subroutineDec"))
+        self.depth += 1
+        self.eat() # constructor | function | method
+        self.eat() # void | type
+        self.eat() # subroutineName
+        self.eat() # (
+        self.parse_parameter_list()
+        self.eat() # )
+        self.parse_subroutine_body()
+        self.depth -= 1
+        self.parse.append((self.depth, "/subroutineDec"))
 
     def parse_parameter_list(self):
-        pass
+        self.parse.append((self.depth, "parameterList"))
+        self.depth += 1
+        if self.peek() != ")":
+            self.eat() # type
+            self.eat() # varName
+            while self.peek() == ",":
+                self.eat() # ,
+                self.eat() # type
+                self.eat() # varName
+        self.depth -= 1
+        self.parse.append((self.depth, "/parameterList"))
 
     def parse_subroutine_body(self):
-        pass
+        self.parse.append((self.depth, "subroutineBody"))
+        self.depth += 1
+        self.eat() # {
+        while self.peek() == "var":
+            self.parse_var_dec()
+        self.parse_statements()
+        self.eat() # }
+        self.depth -= 1
+        self.parse.append((self.depth, "/subroutineBody"))
 
     def parse_var_dec(self):
-        pass
+        self.parse.append((self.depth, "varDec"))
+        self.depth += 1
+        self.eat() # var
+        self.eat() # type
+        self.eat() # varName
+        while self.peek() == ",":
+            self.eat() # ,
+            self.eat() # varName
+        self.eat() # ;
+        self.depth -= 1
+        self.parse.append((self.depth, "/varDec"))
 
     def parse_statements(self):
-        pass
+        self.parse.append((self.depth, "statements"))
+        self.depth += 1
+        while self.peek() in ["let", "if", "while", "do", "return"]:
+            match self.peek():
+                case "let":
+                    self.parse_let()
+                case "if":
+                    self.parse_if()
+                case "while":
+                    self.parse_while()
+                case "do":
+                    self.parse_do()
+                case "return":
+                    self.parse_return()
+        self.depth -= 1
+        self.parse.append((self.depth, "/statements"))
 
     def parse_let(self):
-        pass
+        self.parse.append((self.depth, "letStatement"))
+        self.depth += 1
+        self.eat() # let
+        self.eat() # varName
+        if self.peek() == "[":
+            self.eat() # [
+            self.parse_expression()
+            self.eat() # ]
+        self.eat() # =
+        self.parse_expression()
+        self.eat() # ;
+        self.depth -= 1
+        self.parse.append((self.depth, "/letStatement"))
 
     def parse_if(self):
-        pass
+        self.parse.append((self.depth, "ifStatement"))
+        self.depth += 1
+        self.eat() # if
+        self.eat() # (
+        self.parse_expression()
+        self.eat() # )
+        self.eat() # {
+        self.parse_statements()
+        self.eat() # }
+        if self.peek() == "else":
+            self.eat() # else
+            self.eat() # {
+            self.parse_statements()
+            self.eat() # }
+        self.depth -= 1
+        self.parse.append((self.depth, "/ifStatement"))
 
     def parse_while(self):
-        pass
+        self.parse.append((self.depth, "whileStatement"))
+        self.depth += 1
+        self.eat() # while
+        self.eat() # (
+        self.parse_expression()
+        self.eat() # )
+        self.eat() # {
+        self.parse_statements()
+        self.eat() # }
+        self.depth -= 1
+        self.parse.append((self.depth, "/whileStatement"))
 
     def parse_do(self):
-        pass
+        self.parse.append((self.depth, "doStatement"))
+        self.depth += 1
+        self.eat() # do
+        self.parse_subroutine_call() 
+        self.eat() # ;
+        self.depth -= 1
+        self.parse.append((self.depth, "/doStatement"))
 
     def parse_return(self):
+        self.parse.append((self.depth, "returnStatement"))
+        self.depth += 1
+        self.eat() # return
+        if self.peek() != ";":
+            self.parse_expression()
+        self.eat() # ;
+        self.depth -= 1
+        self.parse.append((self.depth, "/returnStatement"))
+
+    def parse_expression(self):
+        self.parse.append((self.depth, "expression"))
+        self.depth += 1
+        self.parse_term()
+        while self.peek() in ["+", "-", "*", "/", "&", "|", "<", ">", "="]:
+            self.eat() # op
+            self.parse_term()
+        self.depth -= 1
+        self.parse.append((self.depth, "/expression"))
         pass
 
     def parse_term(self):
+        self.parse.append((self.depth, "term"))
+        self.depth += 1
+        # TODO:
+        # Implement Parse
+        self.eat()
+        self.depth -= 1
+        self.parse.append((self.depth, "/term"))
         pass
+
+    def parse_subroutine_call(self):
+        # don't add depth
+        self.eat() # subroutineName | className | varName
+        if self.peek() == ".":
+            self.eat() # .
+            self.eat() # subroutineName
+        self.eat() # (
+        self.parse_expression_list()
+        self.eat() # )
 
     def parse_expression_list(self):
-        pass
+        self.parse.append((self.depth, "expressionList"))
+        self.depth += 1
+        if self.peek() != ")":
+            self.parse_expression()
+            while self.peek() == ",":
+                self.eat() # ,
+                self.parse_expression()
+        self.depth -= 1
+        self.parse.append((self.depth, "/expressionList"))
 
-def write_parser_file(parse):
-    out_file = open("parse.xml", "w")
+def write_parser_file(parse, out_filename):
+    out_file = open(f"{out_filename}.xml", "w")
     for parse_tuple in parse:
         if len(parse_tuple) == 2:
             indent, symbol = parse_tuple[0], parse_tuple[1]
@@ -156,5 +307,5 @@ if __name__=="__main__":
         tokens += tokenize(line)
     parser = Parser(tokens)
     parser.parse_class()
-    write_parser_file(parser.getParse())
+    write_parser_file(parser.getParse(), "test")
     in_file.close()
