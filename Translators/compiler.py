@@ -313,12 +313,33 @@ def remove_comments(in_file):
 
 if __name__=="__main__":
     path = sys.argv[1]
-    in_file = open(path, "r")
-    lines = remove_comments(in_file)
-    tokens = []
-    for line in lines:
-        tokens += tokenize(line)
-    parser = Parser(tokens)
-    parser.parse_class()
-    write_parser_file(parser.getParse(), "test")
-    in_file.close()
+
+    # if it is a file
+    if os.path.isfile(path):
+        filename = path[:-5]
+        in_file = open(path, "r")
+        lines = remove_comments(in_file)
+        tokens = []
+        for line in lines:
+            tokens += tokenize(line)
+        parser = Parser(tokens)
+        parser.parse_class()
+        write_parser_file(parser.getParse(), filename)
+        in_file.close()
+
+    # if it is a directory
+    else:
+        for file in os.listdir(path):
+            if file.endswith(".jack"):
+                filename = file[:-5]
+                in_file_path = os.path.join(path, file)
+                out_file_path = os.path.join(path, filename)
+                in_file = open(in_file_path, "r")
+                lines = remove_comments(in_file)
+                tokens = []
+                for line in lines:
+                    tokens += tokenize(line)
+                parser = Parser(tokens)
+                parser.parse_class()
+                write_parser_file(parser.getParse(), out_file_path)
+                in_file.close()
