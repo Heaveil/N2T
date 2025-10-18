@@ -1,55 +1,63 @@
 import sys, os, re
 
-tokens_dict = {
-    "keyword": [
-        "class", "constructor", "function", "method", "field", "static", "var",
-        "int", "char", "boolean", "void", "true", "false", "null", "this",
-        "let", "do", "if", "else", "while", "return"
-    ],
-    "symbol": [
-        "{", "}", "(", ")", "[", "]", ".", ",", ";",
-        "+", "-", "*", "/", "&", "|", "<", ">", "=", "~"
-    ],
-}
-
-# Returns a Tuple -> (type, token)
-def tokenize(line):
-    escaped = [re.escape(s) for s in tokens_dict["symbol"]]
-    pattern = "(" + "|".join(escaped) + ")"
-    parts = re.split(pattern, line)
-    parts = [p.strip() for p in parts if p.strip()]
-
-    words = []
-    for part in parts:
-        words += [part] if "\"" in part else part.split()
-
-    tokens = []
-    for word in words :
-        if word in tokens_dict["keyword"]:
-            tokens += [("keyword", word)]
-        elif word in tokens_dict["symbol"]:
-            tokens += [("symbol", word)]
-        elif word.isdigit():
-            tokens += [("integerConstant", word)]
-        elif "\"" in word:
-            tokens += [("stringConstant", word.replace("\"", ""))]
-        else:
-            tokens += [("identifier", word)]
-    return tokens
-
-def write_token_file(tokens, out_filename):
-    out_file = open(f"{out_filename}.xml", "w")
-    out_file.write("<tokens>\n")
-    for symbol, token in tokens:
-        out_file.write(f"<{symbol}> {token} </{symbol}>\n")
-    out_file.write("</tokens>\n")
-    out_file.close()
-
-class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
+class Compiler:
+    def __init__(self, filename, source):
+        self.filename = filename
+        self.source = source
+        self.tokens = []
         self.parse = []
         self.depth = 0
+        self.tokens_dict = {
+                "keyword": [
+                    "class", "constructor", "function", "method", "field", "static", "var",
+                    "int", "char", "boolean", "void", "true", "false", "null", "this",
+                    "let", "do", "if", "else", "while", "return"
+                ],
+                "symbol": [
+                    "{", "}", "(", ")", "[", "]", ".", ",", ";",
+                    "+", "-", "*", "/", "&", "|", "<", ">", "=", "~"
+                ],
+        }
+
+    def tokenize(self):
+        for line in self.source:
+            escaped = [re.escape(s) for s in self.tokens_dict["symbol"]]
+            pattern = "(" + "|".join(escaped) + ")"
+            parts = re.split(pattern, line)
+            parts = [p.strip() for p in parts if p.strip()]
+            words = []
+            for part in parts:
+                words += [part] if "\"" in part else part.split()
+            for word in words :
+                if word in self.tokens_dict["keyword"]:
+                    self.tokens += [("keyword", word)]
+                elif word in self.tokens_dict["symbol"]:
+                    self.tokens += [("symbol", word)]
+                elif word.isdigit():
+                    self.tokens += [("integerConstant", word)]
+                elif "\"" in word:
+                    self.tokens += [("stringConstant", word.replace("\"", ""))]
+                else:
+                    self.tokens += [("identifier", word)]
+
+    def write_tokens(self):
+        out_file = open(f"{self.filename}T.xml", "w")
+        out_file.write("<tokens>\n")
+        for symbol, token in self.tokens:
+            out_file.write(f"<{symbol}> {token} </{symbol}>\n")
+        out_file.write("</tokens>\n")
+        out_file.close()
+
+    def write_parser(self):
+        out_file = open(f"{self.filename}.xml", "w")
+        for parse_tuple in self.parse:
+            if len(parse_tuple) == 2:
+                indent, symbol = parse_tuple[0], parse_tuple[1]
+                out_file.write("  " * indent + f"<{symbol}>\n")
+            elif len(parse_tuple) == 3:
+                indent, symbol, token = parse_tuple[0], parse_tuple[1], parse_tuple[2]
+                out_file.write("  " * indent + f"<{symbol}> {token} </{symbol}>\n")
+        out_file.close()
 
     def peek(self):
         return self.tokens[0][1] if self.tokens else None
@@ -62,9 +70,6 @@ class Parser:
 
     def eat(self):
         self.parse.append((self.depth, *self.advance()))
-
-    def getParse(self):
-        return self.parse
 
     def parse_class(self):
         self.parse.append((self.depth, "class"))
@@ -278,17 +283,6 @@ class Parser:
         self.depth -= 1
         self.parse.append((self.depth, "/expressionList"))
 
-def write_parser_file(parse, out_filename):
-    out_file = open(f"{out_filename}.xml", "w")
-    for parse_tuple in parse:
-        if len(parse_tuple) == 2:
-            indent, symbol = parse_tuple[0], parse_tuple[1]
-            out_file.write("  " * indent + f"<{symbol}>\n")
-        elif len(parse_tuple) == 3:
-            indent, symbol, token = parse_tuple[0], parse_tuple[1], parse_tuple[2]
-            out_file.write("  " * indent + f"<{symbol}> {token} </{symbol}>\n")
-    out_file.close()
-
 # Assume if a line has block comments
 # It does not contain any code
 def remove_comments(in_file):
@@ -319,12 +313,11 @@ if __name__=="__main__":
         filename = path[:-5]
         in_file = open(path, "r")
         lines = remove_comments(in_file)
-        tokens = []
-        for line in lines:
-            tokens += tokenize(line)
-        parser = Parser(tokens)
-        parser.parse_class()
-        write_parser_file(parser.getParse(), filename)
+        compiler = Compiler(filename, lines)
+        compiler.tokenize()
+        compiler.parse_class()
+        compiler.write_tokens()
+        compiler.write_parser()
         in_file.close()
 
     # if it is a directory
@@ -336,10 +329,9 @@ if __name__=="__main__":
                 out_file_path = os.path.join(path, filename)
                 in_file = open(in_file_path, "r")
                 lines = remove_comments(in_file)
-                tokens = []
-                for line in lines:
-                    tokens += tokenize(line)
-                parser = Parser(tokens)
-                parser.parse_class()
-                write_parser_file(parser.getParse(), out_file_path)
+                compiler = Compiler(out_file_path, lines)
+                compiler.tokenize()
+                compiler.parse_class()
+                compiler.write_tokens()
+                compiler.write_parser()
                 in_file.close()
