@@ -54,6 +54,9 @@ class Parser:
     def peek(self):
         return self.tokens[0][1] if self.tokens else None
 
+    def peek2(self):
+        return self.tokens[1][1] if len(self.tokens) > 1 else None
+
     def advance(self):
         return self.tokens.pop(0) if self.tokens else (None, None)
 
@@ -69,9 +72,9 @@ class Parser:
         self.eat() # class
         self.eat() # ClassName
         self.eat() # {
-        while self.peek() == "static" or self.peek()=="field":
+        while self.peek() in [ "static", "field"]:
             self.parse_class_var_dec()
-        while self.peek() == "constructor" or self.peek() == "function" or self.peek() == "method":
+        while self.peek() in ["constructor", "function", "method"]:
             self.parse_subroutine_dec()
         self.eat() # }
         self.depth -= 1
@@ -232,17 +235,27 @@ class Parser:
             self.parse_term()
         self.depth -= 1
         self.parse.append((self.depth, "/expression"))
-        pass
 
     def parse_term(self):
         self.parse.append((self.depth, "term"))
         self.depth += 1
-        # TODO:
-        # Implement Parse
-        self.eat()
+        if self.peek() == "(":
+            self.eat() # (
+            self.parse_expression()
+            self.eat() # )
+        elif self.peek() in ["-", "~"]:
+            self.eat() # unaryOP
+            self.parse_term()
+        elif self.peek2() in ["(", "."]:
+            self.parse_subroutine_call()
+        else:
+            self.eat() # intConst | strConst | keyConst | varName
+            if self.peek() == "[":
+                self.eat() # [
+                self.parse_expression()
+                self.eat() # ]
         self.depth -= 1
         self.parse.append((self.depth, "/term"))
-        pass
 
     def parse_subroutine_call(self):
         # don't add depth
