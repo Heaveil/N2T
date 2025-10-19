@@ -109,12 +109,12 @@ class Compiler:
         kind = self.eat() # static | field
         data_type = self.eat() # type
         name = self.eat() # varName
-        self.class_table[name] = [data_type, kind, self.class_counters[kind]]
+        self.class_table[name] = (data_type, kind, self.class_counters[kind])
         self.class_counters[kind] += 1
         while self.peek() == ",":
             self.eat() # ,
             name = self.eat() # varName
-            self.class_table[name] = [data_type, kind, self.class_counters[kind]]
+            self.class_table[name] = (data_type, kind, self.class_counters[kind])
             self.class_counters[kind] += 1
         self.eat() # ;
         self.depth -= 1
@@ -140,18 +140,18 @@ class Compiler:
         self.parse.append((self.depth, "parameterList"))
         self.depth += 1
         if self.subroutine_type == "method":
-            self.subroutine_table["this"] = [self.class_name, "argument", self.subroutine_counters["argument"]]
+            self.subroutine_table["this"] = (self.class_name, "argument", self.subroutine_counters["argument"])
             self.subroutine_counters["argument"] += 1
         if self.peek() != ")":
             data_type = self.eat() # type
             var_name = self.eat() # varName
-            self.subroutine_table[var_name] = [data_type, "argument", self.subroutine_counters["argument"]]
+            self.subroutine_table[var_name] = (data_type, "argument", self.subroutine_counters["argument"])
             self.subroutine_counters["argument"] += 1
             while self.peek() == ",":
                 self.eat() # ,
                 data_type = self.eat() # type
                 var_name = self.eat() # varName
-                self.subroutine_table[var_name] = [data_type, "argument", self.subroutine_counters["argument"]]
+                self.subroutine_table[var_name] = (data_type, "argument", self.subroutine_counters["argument"])
                 self.subroutine_counters["argument"] += 1
         self.depth -= 1
         self.parse.append((self.depth, "/parameterList"))
@@ -173,12 +173,12 @@ class Compiler:
         self.eat() # var
         data_type = self.eat() # type
         var_name = self.eat() # varName
-        self.subroutine_table[var_name] = [data_type, "local", self.subroutine_counters["local"]]
+        self.subroutine_table[var_name] = (data_type, "local", self.subroutine_counters["local"])
         self.subroutine_counters["local"] += 1
         while self.peek() == ",":
             self.eat() # ,
             var_name = self.eat() # varName
-            self.subroutine_table[var_name] = [data_type, "local", self.subroutine_counters["local"]]
+            self.subroutine_table[var_name] = (data_type, "local", self.subroutine_counters["local"])
             self.subroutine_counters["local"] += 1
         self.eat() # ;
         self.depth -= 1
