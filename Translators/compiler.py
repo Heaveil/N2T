@@ -215,7 +215,7 @@ class Compiler:
         self.parse.append((self.depth, "letStatement"))
         self.depth += 1
         self.eat() # let
-        self.eat() # varName
+        varName = self.eat() # varName
         if self.peek() == "[":
             self.eat() # [
             self.parse_expression()
@@ -223,6 +223,12 @@ class Compiler:
         self.eat() # =
         self.parse_expression()
         self.eat() # ;
+        if varName in self.subroutine_table:
+            _, kind, offset = self.subroutine_table[varName]
+        else :
+            _, kind, offset = self.class_table[varName]
+            kind = "this" if kind == "field" else kind
+        self.write(f"pop {kind} {offset}")
         self.depth -= 1
         self.parse.append((self.depth, "/letStatement"))
 
