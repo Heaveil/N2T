@@ -80,6 +80,9 @@ class Compiler:
     def peek2(self):
         return self.tokens[1][1] if len(self.tokens) > 1 else None
 
+    def peek_type(self):
+        return self.tokens[0][0] if self.tokens else None
+
     def advance(self):
         return self.tokens.pop(0) if self.tokens else (None, None)
 
@@ -281,8 +284,27 @@ class Compiler:
         self.depth += 1
         self.parse_term()
         while self.peek() in ["+", "-", "*", "/", "&", "|", "<", ">", "="]:
-            self.eat() # op
+            op = self.eat() # op
             self.parse_term()
+            match op:
+                case "+" :
+                    self.write("add")
+                case "-" :
+                    self.write("sub")
+                case "*" :
+                    self.write("call Math.multiply 2")
+                case "/" :
+                    self.write("call Math.divide 2")
+                case "&" :
+                    self.write("and")
+                case "|" :
+                    self.write("or")
+                case "<" :
+                    self.write("lt")
+                case ">" :
+                    self.write("gt")
+                case "=" :
+                    self.write("eq")
         self.depth -= 1
         self.parse.append((self.depth, "/expression"))
 
@@ -299,7 +321,12 @@ class Compiler:
         elif self.peek2() in ["(", "."]:
             self.parse_subroutine_call()
         else:
-            self.eat() # intConst | strConst | keyConst | varName
+            symbol = self.peek_type()
+            var = self.eat() # intConst | strConst | keyConst | varName
+            # TODO:
+            # Handle other cases
+            if symbol == "integerConstant":
+                self.write(f"push constant {var}")
             if self.peek() == "[":
                 self.eat() # [
                 self.parse_expression()
