@@ -309,24 +309,31 @@ class Compiler:
 
     def parse_subroutine_call(self):
         # don't add depth
-        self.eat() # subroutineName | className | varName
+        subroutine_name = self.eat() # subroutineName | className | varName
         if self.peek() == ".":
-            self.eat() # .
-            self.eat() # subroutineName
+            subroutine_name += self.eat() # .
+            subroutine_name += self.eat() # subroutineName
         self.eat() # (
-        self.parse_expression_list()
+        arguments_length = self.parse_expression_list()
+        # TODO:
+        # Setup for method and constructor
+        self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
 
     def parse_expression_list(self):
         self.parse.append((self.depth, "expressionList"))
         self.depth += 1
+        counter = 0
         if self.peek() != ")":
             self.parse_expression()
+            counter += 1
             while self.peek() == ",":
                 self.eat() # ,
                 self.parse_expression()
+                counter += 1
         self.depth -= 1
         self.parse.append((self.depth, "/expressionList"))
+        return counter
 
 # Assume if a line has block comments
 # It does not contain any code
