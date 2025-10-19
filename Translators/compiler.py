@@ -393,9 +393,20 @@ class Compiler:
             subroutine_name += self.eat() # subroutineName
         self.eat() # (
         arguments_length = self.parse_expression_list()
-        # TODO:
-        # Need to check if it is a method or not
-        # if it is add the obj and arg++
+        if "." in subroutine_name:
+            varName, _ = subroutine_name.split(".")
+            if varName in self.subroutine_table:
+                _, kind, offset = self.subroutine_table[varName]
+                self.write(f"push {kind} {offset}")
+                arguments_length += 1
+            elif varName in self.class_table:
+                _, kind, offset = self.class_table[varName]
+                kind = "this" if kind == "field" else kind
+                self.write(f"push {kind} {offset}")
+                arguments_length += 1
+        else :
+            self.write("push pointer 0")
+            arguments_length += 1
         self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
 
