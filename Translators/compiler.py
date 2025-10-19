@@ -394,18 +394,21 @@ class Compiler:
         self.eat() # (
         arguments_length = self.parse_expression_list()
         if "." in subroutine_name:
-            varName, _ = subroutine_name.split(".")
+            varName, functionName = subroutine_name.split(".")
             if varName in self.subroutine_table:
-                _, kind, offset = self.subroutine_table[varName]
+                data_type , kind, offset = self.subroutine_table[varName]
                 self.write(f"push {kind} {offset}")
                 arguments_length += 1
+                subroutine_name = data_type + "." + functionName
             elif varName in self.class_table:
-                _, kind, offset = self.class_table[varName]
+                data_type , kind, offset = self.class_table[varName]
                 kind = "this" if kind == "field" else kind
                 self.write(f"push {kind} {offset}")
+                subroutine_name = data_type + "." + functionName
                 arguments_length += 1
         else :
             self.write("push pointer 0")
+            subroutine_name = self.class_name + "." + subroutine_name
             arguments_length += 1
         self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
