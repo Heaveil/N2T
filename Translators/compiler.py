@@ -357,12 +357,14 @@ class Compiler:
         else:
             symbol = self.peek_type()
             var = self.eat() # intConst | strConst | keyConst | varName
-            # TODO:
-            # Handle other cases
             if symbol == "integerConstant":
                 self.write(f"push constant {var}")
             elif symbol == "stringConstant":
-                pass
+                self.write(f"push constant {len(var)}")
+                self.write(f"call String.new 1")
+                for char in var:
+                    self.write(f"push constant {ord(char)}")
+                    self.write(f"call String.appendChar 2")
             elif symbol == "keyword":
                 if var == "true":
                     self.write(f"push constant 1")
