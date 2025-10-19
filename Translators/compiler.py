@@ -316,8 +316,13 @@ class Compiler:
             self.parse_expression()
             self.eat() # )
         elif self.peek() in ["-", "~"]:
-            self.eat() # unaryOP
+            unaryOP = self.eat() # unaryOP
             self.parse_term()
+            match unaryOP:
+                case "-":
+                    self.write("neg")
+                case "~":
+                    self.write("not")
         elif self.peek2() in ["(", "."]:
             self.parse_subroutine_call()
         else:
