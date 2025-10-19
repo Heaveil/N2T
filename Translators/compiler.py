@@ -259,6 +259,7 @@ class Compiler:
         self.eat() # do
         self.parse_subroutine_call() 
         self.eat() # ;
+        self.write("pop temp 0")
         self.depth -= 1
         self.parse.append((self.depth, "/doStatement"))
 
