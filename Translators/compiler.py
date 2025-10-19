@@ -261,13 +261,21 @@ class Compiler:
     def parse_while(self):
         self.parse.append((self.depth, "whileStatement"))
         self.depth += 1
+        jump = f"JUMP{self.unique_counter}"
+        end = f"END{self.unique_counter}"
+        self.unique_counter += 1
+        self.write(f"label {jump}")
         self.eat() # while
         self.eat() # (
         self.parse_expression()
         self.eat() # )
+        self.write("not")
+        self.write(f"if-goto {end}")
         self.eat() # {
         self.parse_statements()
         self.eat() # }
+        self.write(f"goto {jump}")
+        self.write(f"label {end}")
         self.depth -= 1
         self.parse.append((self.depth, "/whileStatement"))
 
