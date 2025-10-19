@@ -239,14 +239,22 @@ class Compiler:
         self.eat() # (
         self.parse_expression()
         self.eat() # )
+        jump = f"JUMP{self.unique_counter}" 
+        end = f"END{self.unique_counter}"
+        self.unique_counter += 1
+        self.write("not")
+        self.write(f"if-goto {jump}")
         self.eat() # {
         self.parse_statements()
         self.eat() # }
+        self.write(f"goto {end}")
+        self.write(f"label {jump}")
         if self.peek() == "else":
             self.eat() # else
             self.eat() # {
             self.parse_statements()
             self.eat() # }
+        self.write(f"label {end}")
         self.depth -= 1
         self.parse.append((self.depth, "/ifStatement"))
 
