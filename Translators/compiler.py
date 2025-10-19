@@ -13,7 +13,6 @@ class Compiler:
         self.subroutine_table = {}
         self.subroutine_counters = {"local": 0, "argument": 0}
         self.subroutine_type = ""
-        self.subroutine_return_type = ""
         self.subroutine_name = ""
         self.unique_counter = 0
         self.depth = 0
@@ -135,7 +134,7 @@ class Compiler:
         self.parse.append((self.depth, "subroutineDec"))
         self.depth += 1
         self.subroutine_type = self.eat() # constructor | function | method
-        self.subroutine_return_type = self.eat() # void | type
+        self.eat() # void | type
         self.subroutine_name = self.eat() # subroutineName
         self.eat() # (
         self.parse_parameter_list()
@@ -373,7 +372,6 @@ class Compiler:
                 elif var == "this":
                     self.write(f"push pointer 0")
             elif symbol == "identifier":
-                kind, offset = "", ""
                 if var in self.subroutine_table:
                     _, kind, offset = self.subroutine_table[var]
                 else :
@@ -395,9 +393,9 @@ class Compiler:
             subroutine_name += self.eat() # subroutineName
         self.eat() # (
         arguments_length = self.parse_expression_list()
-        if self.subroutine_type == "method":
-            arguments_length += 1
-            self.write("push pointer 0")
+        # TODO:
+        # Need to check if it is a method or not
+        # if it is add the obj and arg++
         self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
 
