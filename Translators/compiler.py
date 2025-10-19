@@ -171,7 +171,10 @@ class Compiler:
         while self.peek() == "var":
             self.parse_var_dec()
         self.write(f"function {self.class_name}.{self.subroutine_name} {self.subroutine_counters['local']}")
-        if self.subroutine_type == "constructor":
+        if self.subroutine_type == "method":
+            self.write("push argument 0")
+            self.write("pop pointer 0")
+        elif self.subroutine_type == "constructor":
             self.write(f"push constant {self.class_counters['field']}")
             self.write(f"call Memory.alloc 1")
             self.write(f"pop pointer 0")
@@ -392,8 +395,9 @@ class Compiler:
             subroutine_name += self.eat() # subroutineName
         self.eat() # (
         arguments_length = self.parse_expression_list()
-        # TODO:
-        # Setup for method and constructor
+        if self.subroutine_type == "method":
+            arguments_length += 1
+            self.write("push pointer 0")
         self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
 
