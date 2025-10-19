@@ -171,6 +171,10 @@ class Compiler:
         while self.peek() == "var":
             self.parse_var_dec()
         self.write(f"function {self.class_name}.{self.subroutine_name} {self.subroutine_counters['local']}")
+        if self.subroutine_type == "constructor":
+            self.write(f"push constant {self.class_counters['field']}")
+            self.write(f"call Memory.alloc 1")
+            self.write(f"pop pointer 0")
         self.parse_statements()
         self.eat() # }
         self.depth -= 1
