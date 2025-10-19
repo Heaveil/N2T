@@ -6,6 +6,13 @@ class Compiler:
         self.source = source
         self.tokens = []
         self.parse = []
+        self.vm_code = []
+        self.class_name = ""
+        self.class_table = {}
+        self.class_counters = {"static": 0, "field": 0}
+        self.subroutine_table = {}
+        self.subroutine_counters = {"local": 0, "argument": 0}
+        self.subroutine_type = ""
         self.depth = 0
         self.tokens_dict = {
                 "keyword": [
@@ -59,6 +66,12 @@ class Compiler:
                 out_file.write("  " * indent + f"<{symbol}> {token} </{symbol}>\n")
         out_file.close()
 
+    def write_vm_code(self):
+        out_file = open(f"{self.filename}.vm", "w")
+        for code in self.vm_code:
+            out_file.write(f"{code}\n")
+        out_file.close()
+
     def peek(self):
         return self.tokens[0][1] if self.tokens else None
 
@@ -69,13 +82,18 @@ class Compiler:
         return self.tokens.pop(0) if self.tokens else (None, None)
 
     def eat(self):
-        self.parse.append((self.depth, *self.advance()))
+        symbol, token = self.advance()
+        self.parse.append((self.depth, symbol, token))
+        return token
 
     def parse_class(self):
+        self.class_table = {}
+        self.class_counters = {"static": 0, "field": 0}
         self.parse.append((self.depth, "class"))
         self.depth += 1
         self.eat() # class
-        self.eat() # ClassName
+        class_name = self.eat() # ClassName
+        self.class_name = class_name
         self.eat() # {
         while self.peek() in [ "static", "field"]:
             self.parse_class_var_dec()
@@ -88,20 +106,27 @@ class Compiler:
     def parse_class_var_dec(self):
         self.parse.append((self.depth, "classVarDec"))
         self.depth += 1
-        self.eat() # static | field
-        self.eat() # type
-        self.eat() # varName
+        kind = self.eat() # static | field
+        data_type = self.eat() # type
+        name = self.eat() # varName
+        self.class_table[name] = [data_type, kind, self.class_counters[kind]]
+        self.class_counters[kind] += 1
         while self.peek() == ",":
             self.eat() # ,
-            self.eat() # varName
+            name = self.eat() # varName
+            self.class_table[name] = [data_type, kind, self.class_counters[kind]]
+            self.class_counters[kind] += 1
         self.eat() # ;
         self.depth -= 1
         self.parse.append((self.depth, "/classVarDec"))
 
     def parse_subroutine_dec(self):
+        self.subroutine_table = {}
+        self.subroutine_counters = {"local": 0, "argument": 0}
         self.parse.append((self.depth, "subroutineDec"))
         self.depth += 1
-        self.eat() # constructor | function | method
+        sub_type = self.eat() # constructor | function | method
+        self.subroutine_type = sub_type
         self.eat() # void | type
         self.eat() # subroutineName
         self.eat() # (
@@ -114,13 +139,20 @@ class Compiler:
     def parse_parameter_list(self):
         self.parse.append((self.depth, "parameterList"))
         self.depth += 1
+        if self.subroutine_type == "method":
+            self.subroutine_table["this"] = [self.class_name, "argument", self.subroutine_counters["argument"]]
+            self.subroutine_counters["argument"] += 1
         if self.peek() != ")":
-            self.eat() # type
-            self.eat() # varName
+            data_type = self.eat() # type
+            var_name = self.eat() # varName
+            self.subroutine_table[var_name] = [data_type, "argument", self.subroutine_counters["argument"]]
+            self.subroutine_counters["argument"] += 1
             while self.peek() == ",":
                 self.eat() # ,
-                self.eat() # type
-                self.eat() # varName
+                data_type = self.eat() # type
+                var_name = self.eat() # varName
+                self.subroutine_table[var_name] = [data_type, "argument", self.subroutine_counters["argument"]]
+                self.subroutine_counters["argument"] += 1
         self.depth -= 1
         self.parse.append((self.depth, "/parameterList"))
 
@@ -139,11 +171,15 @@ class Compiler:
         self.parse.append((self.depth, "varDec"))
         self.depth += 1
         self.eat() # var
-        self.eat() # type
-        self.eat() # varName
+        data_type = self.eat() # type
+        var_name = self.eat() # varName
+        self.subroutine_table[var_name] = [data_type, "local", self.subroutine_counters["local"]]
+        self.subroutine_counters["local"] += 1
         while self.peek() == ",":
             self.eat() # ,
-            self.eat() # varName
+            var_name = self.eat() # varName
+            self.subroutine_table[var_name] = [data_type, "local", self.subroutine_counters["local"]]
+            self.subroutine_counters["local"] += 1
         self.eat() # ;
         self.depth -= 1
         self.parse.append((self.depth, "/varDec"))
@@ -316,8 +352,6 @@ if __name__=="__main__":
         compiler = Compiler(filename, lines)
         compiler.tokenize()
         compiler.parse_class()
-        compiler.write_tokens()
-        compiler.write_parser()
         in_file.close()
 
     # if it is a directory
@@ -332,6 +366,4 @@ if __name__=="__main__":
                 compiler = Compiler(out_file_path, lines)
                 compiler.tokenize()
                 compiler.parse_class()
-                compiler.write_tokens()
-                compiler.write_parser()
                 in_file.close()
