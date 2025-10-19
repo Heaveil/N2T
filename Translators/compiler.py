@@ -13,6 +13,8 @@ class Compiler:
         self.subroutine_table = {}
         self.subroutine_counters = {"local": 0, "argument": 0}
         self.subroutine_type = ""
+        self.subroutine_return_type = ""
+        self.subroutine_name = ""
         self.depth = 0
         self.tokens_dict = {
                 "keyword": [
@@ -86,14 +88,17 @@ class Compiler:
         self.parse.append((self.depth, symbol, token))
         return token
 
+    def write(self, code):
+        self.vm_code.append(code)
+        print(code)
+
     def parse_class(self):
         self.class_table = {}
         self.class_counters = {"static": 0, "field": 0}
         self.parse.append((self.depth, "class"))
         self.depth += 1
         self.eat() # class
-        class_name = self.eat() # ClassName
-        self.class_name = class_name
+        self.class_name = self.eat() # ClassName
         self.eat() # {
         while self.peek() in [ "static", "field"]:
             self.parse_class_var_dec()
@@ -125,10 +130,9 @@ class Compiler:
         self.subroutine_counters = {"local": 0, "argument": 0}
         self.parse.append((self.depth, "subroutineDec"))
         self.depth += 1
-        sub_type = self.eat() # constructor | function | method
-        self.subroutine_type = sub_type
-        self.eat() # void | type
-        self.eat() # subroutineName
+        self.subroutine_type = self.eat() # constructor | function | method
+        self.subroutine_return_type = self.eat() # void | type
+        self.subroutine_name = self.eat() # subroutineName
         self.eat() # (
         self.parse_parameter_list()
         self.eat() # )
@@ -162,6 +166,7 @@ class Compiler:
         self.eat() # {
         while self.peek() == "var":
             self.parse_var_dec()
+        self.write(f"function {self.class_name}.{self.subroutine_name} {self.subroutine_counters['local']}")
         self.parse_statements()
         self.eat() # }
         self.depth -= 1
