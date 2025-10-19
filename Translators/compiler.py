@@ -15,6 +15,7 @@ class Compiler:
         self.subroutine_type = ""
         self.subroutine_return_type = ""
         self.subroutine_name = ""
+        self.unique_counter = 0
         self.depth = 0
         self.tokens_dict = {
                 "keyword": [
@@ -103,7 +104,7 @@ class Compiler:
         self.eat() # class
         self.class_name = self.eat() # ClassName
         self.eat() # {
-        while self.peek() in [ "static", "field"]:
+        while self.peek() in ["static", "field"]:
             self.parse_class_var_dec()
         while self.peek() in ["constructor", "function", "method"]:
             self.parse_subroutine_dec()
@@ -332,6 +333,24 @@ class Compiler:
             # Handle other cases
             if symbol == "integerConstant":
                 self.write(f"push constant {var}")
+            elif symbol == "stringConstant":
+                pass
+            elif symbol == "keyword":
+                if var == "true":
+                    self.write(f"push constant 1")
+                    self.write(f"neg")
+                elif var == "false" or var == "null":
+                    self.write(f"push constant 0")
+                elif var == "this":
+                    self.write(f"push pointer 0")
+            elif symbol == "identifier":
+                kind, offset = "", ""
+                if var in self.subroutine_table:
+                    _, kind, offset = self.subroutine_table[var]
+                else :
+                    _, kind, offset = self.class_table[var]
+                    kind = "this" if kind == "field" else kind
+                self.write(f"push {kind} {offset}")
             if self.peek() == "[":
                 self.eat() # [
                 self.parse_expression()
