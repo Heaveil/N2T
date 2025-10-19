@@ -268,6 +268,9 @@ class Compiler:
         self.eat() # return
         if self.peek() != ";":
             self.parse_expression()
+        else:
+            self.write(f"push constant 0")
+        self.write("return")
         self.eat() # ;
         self.depth -= 1
         self.parse.append((self.depth, "/returnStatement"))
