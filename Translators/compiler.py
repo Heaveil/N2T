@@ -392,7 +392,7 @@ class Compiler:
             subroutine_name += self.eat() # .
             subroutine_name += self.eat() # subroutineName
         self.eat() # (
-        arguments_length = self.parse_expression_list()
+        arguments_length = 0
         if "." in subroutine_name:
             varName, functionName = subroutine_name.split(".")
             if varName in self.subroutine_table:
@@ -410,6 +410,7 @@ class Compiler:
             self.write("push pointer 0")
             subroutine_name = self.class_name + "." + subroutine_name
             arguments_length += 1
+        arguments_length += self.parse_expression_list()
         self.write(f"call {subroutine_name} {arguments_length}")
         self.eat() # )
 
