@@ -93,7 +93,6 @@ class Compiler:
 
     def write(self, code):
         self.vm_code.append(code)
-        print(code)
 
     def parse_class(self):
         self.class_table = {}
@@ -222,19 +221,29 @@ class Compiler:
         self.depth += 1
         self.eat() # let
         varName = self.eat() # varName
-        if self.peek() == "[":
-            self.eat() # [
-            self.parse_expression()
-            self.eat() # ]
-        self.eat() # =
-        self.parse_expression()
-        self.eat() # ;
         if varName in self.subroutine_table:
             _, kind, offset = self.subroutine_table[varName]
         else :
             _, kind, offset = self.class_table[varName]
             kind = "this" if kind == "field" else kind
-        self.write(f"pop {kind} {offset}")
+        is_array = False
+        if self.peek() == "[":
+            self.eat() # [
+            self.parse_expression()
+            self.eat() # ]
+            self.write(f"push {kind} {offset}")
+            self.write(f"add")
+            is_array = True
+        self.eat() # =
+        self.parse_expression()
+        self.eat() # ;
+        if is_array:
+            self.write("pop temp 0")
+            self.write("pop pointer 1")
+            self.write("push temp 0")
+            self.write("pop that 0")
+        else :
+            self.write(f"pop {kind} {offset}")
         self.depth -= 1
         self.parse.append((self.depth, "/letStatement"))
 
@@ -384,6 +393,9 @@ class Compiler:
                 self.eat() # [
                 self.parse_expression()
                 self.eat() # ]
+                self.write("add")
+                self.write("pop pointer 1")
+                self.write("push that 0")
         self.depth -= 1
         self.parse.append((self.depth, "/term"))
 
@@ -464,6 +476,7 @@ if __name__=="__main__":
         compiler = Compiler(filename, lines)
         compiler.tokenize()
         compiler.parse_class()
+        compiler.write_vm_code()
         in_file.close()
 
     # if it is a directory
@@ -478,4 +491,5 @@ if __name__=="__main__":
                 compiler = Compiler(out_file_path, lines)
                 compiler.tokenize()
                 compiler.parse_class()
+                compiler.write_vm_code()
                 in_file.close()
