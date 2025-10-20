@@ -28,6 +28,7 @@ class Compiler:
                 ],
         }
 
+    # Assume string literals cannot contain symbol
     def tokenize(self):
         for line in self.source:
             escaped = [re.escape(s) for s in self.tokens_dict["symbol"]]
@@ -443,8 +444,7 @@ class Compiler:
         self.parse.append((self.depth, "/expressionList"))
         return counter
 
-# Assume if a line has block comments
-# It does not contain any code
+# Assume if a line has block comments, It does not contain any code
 def remove_comments(in_file):
     lines = in_file.readlines()
     block_comment = False
