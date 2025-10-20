@@ -28,16 +28,19 @@ class Compiler:
                 ],
         }
 
-    # Assume string literals cannot contain symbol
     def tokenize(self):
+        escaped = [re.escape(s) for s in self.tokens_dict["symbol"]]
+        pattern = "(" + "|".join(escaped) + ")"
         for line in self.source:
-            escaped = [re.escape(s) for s in self.tokens_dict["symbol"]]
-            pattern = "(" + "|".join(escaped) + ")"
-            parts = re.split(pattern, line)
-            parts = [p.strip() for p in parts if p.strip()]
+            string_parts = re.split(r'(".*?")', line)
             words = []
-            for part in parts:
-                words += [part] if "\"" in part else part.split()
+            for part in string_parts:
+                if '"' in part:
+                    words.append(part)
+                else:
+                    subparts = re.split(pattern, part)
+                    subparts = [p.strip() for p in subparts if p.strip()]
+                    words += [w for sub in subparts for w in sub.split()]
             for word in words :
                 if word in self.tokens_dict["keyword"]:
                     self.tokens += [("keyword", word)]
