@@ -10,10 +10,16 @@
 class Memory {
 
     static Array ram;
+    static Array heap;
+    static Array freeList;
 
     /** Initializes the class. */
     function void init() {
         let ram = 0;
+        let heap = 2048; // heapbase
+        let heap[0] = 0; // next
+        let heap[1] = 14335; // length
+        let freelist = heap;
         return;
     }
 
@@ -36,7 +42,10 @@ class Memory {
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
-    function void deAlloc(Array o) {
+    function void deAlloc(Array object) {
+        let object = object - 2;
+        let object[0] = freelist ;
+        let freelist = object;
         return;
     }
 }
