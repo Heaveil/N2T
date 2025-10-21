@@ -15,6 +15,17 @@ class Math {
 
     // Initializes the Math library.
     function void init() {
+        var int i, power;
+        let n = 16;
+        let powersOfTwo = Array.new(n);
+        let power = 1;
+        let i = 0;
+        while (i < n) {
+            let powersOfTwo[i] = power;
+            let power = power + power;
+            let i = i + 1;
+        }
+        return;
     }
 
     /** Returns the product of x and y. 
@@ -60,6 +71,17 @@ class Math {
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+        var int y, j, k;
+        let y = 0;
+        let j = (n / 2) - 1;
+        while (j > 0) {
+            let k = (y + powersOfTwo[j]) * (y + powersOfTwo[j]);
+            if ( (~(k > x)) & (k > 0) ) {
+                let y = y + powersOfTwo[j];
+            }
+            let j = j - 1;
+        }
+        return y;
     }
 
     /** Returns the greater value. */
