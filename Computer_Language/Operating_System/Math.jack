@@ -96,6 +96,11 @@ class Math {
         return y;
     }
 
+    /** Returns x^2 */
+    function int twoToThe(int x){
+        return powersOfTwo[x];
+    }
+
     /** Returns the greater value. */
     function int max(int a, int b) {
         if (a > b) {
