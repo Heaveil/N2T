@@ -33,6 +33,18 @@ class Math {
      *  in an expression, it handles it by invoking this method. 
      *  Thus, in Jack, x * y and Math.multiply(x,y) return the same value. */
     function int multiply(int x, int y) {
+        var int sum, shiftedX, i;
+        let sum = 0;
+        let shiftedX = x;
+        let i = 0;
+        while (i < n){
+            if ((y & powersOfTwo[i]) = powersOfTwo[i]) {
+                let sum = sum + shiftedX;
+            }
+            let shiftedX = shiftedX + shiftedX;
+            let i = i + 1;
+        }
+        return sum;
     }
 
     /** Returns the integer part of x / y.
@@ -74,7 +86,7 @@ class Math {
         var int y, j, k;
         let y = 0;
         let j = (n / 2) - 1;
-        while (j > 0) {
+        while (j > -1) {
             let k = (y + powersOfTwo[j]) * (y + powersOfTwo[j]);
             if ( (~(k > x)) & (k > 0) ) {
                 let y = y + powersOfTwo[j];
