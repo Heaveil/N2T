@@ -15,7 +15,6 @@ class Math {
 
     // Initializes the Math library.
     function void init() {
-        return;
     }
 
     /** Returns the product of x and y. 
@@ -23,7 +22,6 @@ class Math {
      *  in an expression, it handles it by invoking this method. 
      *  Thus, in Jack, x * y and Math.multiply(x,y) return the same value. */
     function int multiply(int x, int y) {
-        return;
     }
 
     /** Returns the integer part of x / y.
@@ -31,12 +29,37 @@ class Math {
      *  an an expression, it handles it by invoking this method.
      *  Thus, x/y and Math.divide(x,y) return the same value. */
     function int divide(int x, int y) {
-        return;
+        var int negative, result;
+        let negative = 0;
+        if ((~((x < 0) & (y < 0))) & ((x < 0) | (y < 0))) {
+            let negative = 1;
+        }
+        let x = Math.abs(x);
+        let y = Math.abs(y);
+        let result = Math.divideHelper(x, y);
+        if (negative = 1) {
+            return -result;
+        }
+        return result;
+    }
+
+    /** divide algorithm from lecture */
+    function int divideHelper(int x, int y){
+        var int q;
+        if ((y > x) | (y < 0)) {
+            return 0;
+        }
+        let q = Math.divideHelper(x, 2 * y);
+        if ((x - (2 * q * y)) < y) {
+            return (2 * q);
+        }
+        else {
+            return ((2 * q) + 1);
+        }
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        return;
     }
 
     /** Returns the greater value. */
