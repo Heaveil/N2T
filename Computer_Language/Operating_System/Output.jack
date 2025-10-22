@@ -180,7 +180,7 @@ class Output {
         let row = 0;
         while (row < 11){
             let pattern = map[row];
-            let address = (screen + (((cursorY * 11) + row) * 32) + cursorX);
+            let address = ((((cursorY * 11) + row) * 32) + cursorX);
             let screen[address] = pattern;
             let row = row + 1;
         }
