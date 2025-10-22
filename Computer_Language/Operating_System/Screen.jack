@@ -43,12 +43,8 @@ class Screen {
         var int address, mask;
         let address = ((32 * y) + (x / 16));
         let mask = Math.twoToThe(x & 15);
-        if (color) {
-            let screen[address] = (screen[address] | mask);
-        }
-        else {
-            let screen[address] = (screen[address] & (~mask));
-        }
+        if (color) { let screen[address] = (screen[address] | mask); }
+        else { let screen[address] = (screen[address] & (~mask)); }
         return;
     }
 
@@ -60,18 +56,10 @@ class Screen {
         let dy = Math.abs(y2 - y1);
         let dy = -dy;
         let error = dx + dy;
-        if (x1 < x2) {
-            let sx = 1;
-        }
-        else {
-            let sx = -1;
-        }
-        if (y1 < y2) {
-            let sy = 1;
-        }
-        else {
-            let sy = -1;
-        }
+        if (x1 < x2) { let sx = 1; }
+        else { let sx = -1; }
+        if (y1 < y2) { let sy = 1; }
+        else { let sy = -1; }
         while (~((x1 = x2) & (y1 = y2))) {
             do Screen.drawPixel(x1, y1);
             let e2 = error + error;
@@ -112,9 +100,7 @@ class Screen {
             do Screen.drawLine(x - cy, y + cx, x + cy, y + cx);
             do Screen.drawLine(x - cy, y - cx, x + cy, y - cx);
             let cy = cy + 1;
-            if (radiusError < 0) {
-                let radiusError = radiusError + (2 * cy) + 1;
-            }
+            if (radiusError < 0) { let radiusError = radiusError + (2 * cy) + 1; }
             else {
                 let cx = cx - 1;
                 let radiusError = radiusError + (2 * (cy - cx + 1));

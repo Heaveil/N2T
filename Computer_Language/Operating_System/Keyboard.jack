@@ -10,7 +10,7 @@ class Keyboard {
     /** Initializes the keyboard. */
     function void init() {
         return;
-    } 
+    }
 
     /**
      * Returns the character of the currently pressed key on the keyboard;
@@ -58,12 +58,8 @@ class Keyboard {
         do Output.printString(message);
         let c = Keyboard.readChar();
         while (~(c = String.newLine())) {
-            if (c = String.backSpace()) {
-                do line.eraseLastChar();
-            }
-            else {
-                do line.appendChar(c);
-            }
+            if (c = String.backSpace()) { do line.eraseLastChar(); }
+            else { do line.appendChar(c); }
             let c = Keyboard.readChar();
         }
         return line;

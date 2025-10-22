@@ -17,21 +17,15 @@ class String {
     /** constructs a new empty string with a maximum length of maxLength
      *  and initial length of 0. */
     constructor String new(int maxLength) {
-        if (maxLength > 0) {
-            let str = Array.new(maxLength);
-        }
-        else {
-            let str = null;
-        }
+        if (maxLength > 0) { let str = Array.new(maxLength); }
+        else { let str = null; }
         let length = 0;
         return this;
     }
 
     /** Disposes this string. */
     method void dispose() {
-        if (~(str = null)){
-            do str.dispose();
-        }
+        if (~(str = null)){ do str.dispose(); }
         return;
     }
 
@@ -67,25 +61,22 @@ class String {
     /** Returns the integer value of this string, 
      *  until a non-digit character is detected. */
     method int intValue() {
-        var int val, i, d, negative;
-        let val = 0;
+        var int val, i, d;
+        var boolean negative;
         let i = 0;
-        let negative = 0;
+        let val = 0;
+        let negative = false;
         if (str[i] = 45) {
-            let negative = 1;
+            let negative = true;
             let i = i + 1;
         }
         while (i < length) {
             let d = str[i];
-            if ((d < 48) | (d > 57)) {
-                return val;
-            }
+            if ((d < 48) | (d > 57)) { return val; }
             let val = ((val * 10) + (d - 48));
             let i = i + 1;
         }
-        if (negative = 1) {
-            return -val;
-        }
+        if (negative) { return -val; }
         return val;
     }
 
@@ -106,9 +97,7 @@ class String {
     method char setIntHelper(int val){
         var char c, d;
         let c = ((val - ((val / 10) * 10)) + 48);
-        if (val < 10) {
-            return c;
-        }
+        if (val < 10) { return c; }
         else {
             let d = setIntHelper(val/10);
             do appendChar(d);

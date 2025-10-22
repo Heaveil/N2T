@@ -38,9 +38,7 @@ class Math {
         let shiftedX = x;
         let i = 0;
         while (i < n){
-            if ((y & powersOfTwo[i]) = powersOfTwo[i]) {
-                let sum = sum + shiftedX;
-            }
+            if ((y & powersOfTwo[i]) = powersOfTwo[i]) { let sum = sum + shiftedX; }
             let shiftedX = shiftedX + shiftedX;
             let i = i + 1;
         }
@@ -52,33 +50,24 @@ class Math {
      *  an an expression, it handles it by invoking this method.
      *  Thus, x/y and Math.divide(x,y) return the same value. */
     function int divide(int x, int y) {
-        var int negative, result;
-        let negative = 0;
-        if ((~((x < 0) & (y < 0))) & ((x < 0) | (y < 0))) {
-            let negative = 1;
-        }
+        var int result;
+        var boolean negative;
+        let negative = false;
+        if ((~((x < 0) & (y < 0))) & ((x < 0) | (y < 0))) { let negative = true; }
         let x = Math.abs(x);
         let y = Math.abs(y);
         let result = Math.divideHelper(x, y);
-        if (negative = 1) {
-            return -result;
-        }
+        if (negative) { return -result; }
         return result;
     }
 
     /** divide algorithm from lecture */
     function int divideHelper(int x, int y){
         var int q;
-        if ((y > x) | (y < 0)) {
-            return 0;
-        }
+        if ((y > x) | (y < 0)) { return 0; }
         let q = Math.divideHelper(x, 2 * y);
-        if ((x - (2 * q * y)) < y) {
-            return (2 * q);
-        }
-        else {
-            return ((2 * q) + 1);
-        }
+        if ((x - (2 * q * y)) < y) { return (2 * q); }
+        else { return ((2 * q) + 1); }
     }
 
     /** Returns the integer part of the square root of x. */
@@ -88,9 +77,7 @@ class Math {
         let j = (n / 2) - 1;
         while (j > -1) {
             let k = (y + powersOfTwo[j]) * (y + powersOfTwo[j]);
-            if ( (~(k > x)) & (k > 0) ) {
-                let y = y + powersOfTwo[j];
-            }
+            if ( (~(k > x)) & (k > 0) ) { let y = y + powersOfTwo[j]; }
             let j = j - 1;
         }
         return y;
@@ -103,25 +90,19 @@ class Math {
 
     /** Returns the greater value. */
     function int max(int a, int b) {
-        if (a > b) {
-            return a;
-        }
+        if (a > b) { return a; }
         return b;
     }
 
     /** Returns the smaller value. */
     function int min(int a, int b) {
-        if (a < b){
-            return a;
-        }
+        if (a < b){ return a; }
         return b;
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
-        if (x < 0) {
-            return -x;
-        }
+        if (x < 0) { return -x; }
         return x;
     }
 }
