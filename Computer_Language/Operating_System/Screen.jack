@@ -49,7 +49,7 @@ class Screen {
     }
 
     /** Draws a line from pixel (x1,y1) to pixel (x2,y2), using the current color. */
-    // https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+    // https://en.wikipedia.org/wiki/Bresenham's_line_algorithm
     function void drawLine(int x1, int y1, int x2, int y2) {
         var int dx, sx, dy, sy, error, e2;
         let dx = Math.abs(x2 - x1);
